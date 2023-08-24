@@ -17,7 +17,7 @@ This was created in response to the various AppleTV spoof messages being sent ou
 
 # Hardware Requirements
 
-To run these scripts you need a Linux machine with a Bluetooth adapter.
+To run these scripts you need a Linux machine with an internal Bluetooth card or a USB Bluetooth adapter.
 
 All original testing was done on a Lenovo T480 with a built-in Bluetooth adapter.\
 Later tested on Raspberry Pi 3B+ running Kali Linux with a Zexmte Long Range USB Bluetooth 5.1 Adapter with Dual Antenna.
