@@ -20,11 +20,10 @@ This was created in response to the various AppleTV spoof messages being sent ou
 To run these scripts you need a Linux machine with an internal Bluetooth card or a USB Bluetooth adapter.
 
 All original testing was done on a Lenovo T480 with a built-in Bluetooth adapter.\
-Later tested on Raspberry Pi 3B+ running Kali Linux with a Zexmte Long Range USB Bluetooth 5.1 Adapter with Dual Antenna.
+Later tested on Raspberry Pi 3B+ running Kali Linux with a [Zexmte Long Range USB Bluetooth 5.1 Adapter with Dual Antenna](https://zexmte.com/collections/bluetooth-adapter/products/plug-play-long-range-bluetooth-5-1-usb-adapter).<br><br>
 
-<img src="https://github.com/ECTO-1A/AppleJuice/assets/112792126/a6f2b9fa-ca26-45c1-a440-681beb55c76e" width="300">
+<img src="https://github.com/ECTO-1A/AppleJuice/assets/112792126/a6f2b9fa-ca26-45c1-a440-681beb55c76e" width="300"><br><br>
 
-https://zexmte.com/collections/bluetooth-adapter/products/plug-play-long-range-bluetooth-5-1-usb-adapter
 
 With the Lenovo computer running Kali Linux using the internal Bluetooth, the messages would only reach devices within a couple feet of the machine. 
 
@@ -43,8 +42,14 @@ Please follow in this exact order or you might run into issues with bluetooth de
 The pybluez library is broken on Github and needs to be installed manually
   - download the latest version from `pip install git+https://github.com/pybluez/pybluez.git#egg=pybluez`
 
-**Install Requirements
+**Install Requirements**\
 `sudo pip install -r requirements.txt'
+
+**To Run Scripts Without Sudo**\
+To be able to run without sudo, you need to set the capabilities of the python binary to allow it to access raw sockets. This is done with the following command:
+
+`sudo setcap cap_net_raw,cap_net_admin+eip $(eval readlink -f 'which python'`
+
 
 # Usage
 
