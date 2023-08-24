@@ -40,7 +40,7 @@ Please follow in this exact order or you might run into issues with bluetooth de
 `install -y bluez libpcap-dev libev-dev libnl-3-dev libnl-genl-3-dev libnl-route-3-dev cmake libbluetooth-dev`
 
 **Install pybluez**\
-The pybluez library is broken on Github and needs to be installed manually\
+The pybluez library is broken on Github and needs to be installed manually
   - download the latest version from `pip install git+https://github.com/pybluez/pybluez.git#egg=pybluez`
 
 **Install Requirements
