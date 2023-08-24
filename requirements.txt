@@ -1,0 +1,9 @@
+bs4
+fleep
+Pillow
+requests
+pycrypto
+netifaces
+prettytable
+libarchive-c
+ctypescrypto
