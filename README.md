@@ -75,5 +75,11 @@ Model: Airpods Max
 
 # Credit
 
-Credit to [FuriousMAC](https://github.com/furiousMAC/continuity) and [Hexway](https://github.com/hexway/apple_bleee) for all the prior research on Apple BLE, Continuity, and building the Wireshark disector.
-Also to [Jae Bochs](https://infosec.exchange/@jb0x168/110879394826675242) for [exposing this to me at DEF CON 31](https://techcrunch.com/2023/08/14/researcher-says-they-were-behind-iphone-popups-at-def-con/) which made me jump into learning about BLE.
+Credit to:
+- [FuriousMAC](https://github.com/furiousMAC/continuity) and [Hexway](https://github.com/hexway/apple_bleee) for all the prior research on Apple BLE, Continuity, and building the Wireshark disector.
+- [Jae Bochs](https://infosec.exchange/@jb0x168/110879394826675242) for [exposing this to me at DEF CON 31](https://techcrunch.com/2023/08/14/researcher-says-they-were-behind-iphone-popups-at-def-con/) which made me jump into learning about BLE.
+- Guillaume Celosia and Mathieu Cunche for reverse engineering Proximity Pairing 
+<a
+href="https://petsymposium.org/2020/files/papers/issue1/popets-2020-0003.pdf">Discontinued
+Privacy: Personal Data Leaks in Apple Bluetooth-Low-Energy Continuity
+Protocols</a>.
