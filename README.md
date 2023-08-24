@@ -57,19 +57,21 @@ Devices:
 ```
 *If the adapter is showing as* `hci1` *you will need to edit the* `dev_id` *variable in the scripts to match*
 
+# Examples
 
-**airpods.py**
+**beatssolopro.py**
 
 Model: Airpods
 This script is used to send BLE pairing messages to Apple devices.
 
---IMAGE--
 
-**airpods_pro.py**
+<img src="https://github.com/ECTO-1A/AppleJuice/assets/112792126/c3218a09-7aef-483b-957d-f3c19a55fc08" width="300">
 
-Model: Airpods Pro
+**airpods_max.py**
 
-This script is used to send BLE pairing messages to Apple devices.
+Model: Airpods Max
+
+<img src="https://github.com/ECTO-1A/AppleJuice/assets/112792126/5eea40e8-d7c1-4324-9f3d-1425228d0458" width="300">
 
 # Credit
 
