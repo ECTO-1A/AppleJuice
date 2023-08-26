@@ -36,11 +36,12 @@ Please follow in this exact order or you might run into issues with bluetooth de
 `git clone https://github.com/ECTO-1A/AppleJuice.git && cd ./AppleJuice`
 
 **Install dependancies**\
-`install -y bluez libpcap-dev libev-dev libnl-3-dev libnl-genl-3-dev libnl-route-3-dev cmake libbluetooth-dev`
+`sudo apt update && sudo apt install -y bluez libpcap-dev libev-dev libnl-3-dev libnl-genl-3-dev libnl-route-3-dev cmake libbluetooth-dev`
 
-**Install pybluez**\
+**Install pybluez && pycryptodome**\
 The pybluez library is broken on Github and needs to be installed manually
   - download the latest version from `pip install git+https://github.com/pybluez/pybluez.git#egg=pybluez`
+  - pycrypto is not maintained but you can install pycryptodome and it will work `pip install pycryptodome`
 
 **Install Requirements**\
 `sudo pip install -r requirements.txt'
@@ -48,7 +49,7 @@ The pybluez library is broken on Github and needs to be installed manually
 **To Run Scripts Without Sudo**\
 To be able to run without sudo, you need to set the capabilities of the python binary to allow it to access raw sockets. This is done with the following command:
 
-`sudo setcap cap_net_raw,cap_net_admin+eip $(eval readlink -f 'which python'`
+`sudo setcap cap_net_raw,cap_net_admin+eip $(eval readlink -f $(which python))`
 
 
 # Usage
