@@ -1,6 +1,11 @@
 # AppleJuice
-**Apple BLE Proximity Pairing Message Spoofing**
+# Apple BLE Proximity Pairing Message Spoofing
 
+~ **Update 8/31/23** ~
+
+I have combined all messages into a single app. You can now run `app.py` to get a list of available options.<br>
+To run the script use `-d (number of message)`  *example* `app.py -d 13` <br>
+*See Usage section below for more info*
 
 # Disclaimer
 
@@ -44,14 +49,16 @@ The pybluez library is broken on Github and needs to be installed manually
   - pycrypto is not maintained but you can install pycryptodome and it will work `pip install pycryptodome`
 
 **Install Requirements**\
-`sudo pip install -r requirements.txt'
+`sudo pip install -r requirements.txt`
 
 **To Run Scripts Without Sudo**\
 To be able to run without sudo, you need to set the capabilities of the python binary to allow it to access raw sockets. This is done with the following command:
 
 `sudo setcap cap_net_raw,cap_net_admin+eip $(eval readlink -f $(which python))`
 
-
+**Reboot Machine**\
+Several users have reported the need for a reboot after installing the bluetooth packages in order for everything to work properly.
+<br>
 # Usage
 
 Before running the script, check that your Bluetooth adapter is connected and showing as `hci0`\
@@ -62,6 +69,46 @@ Devices:
     hci0    00:00:7C:00:3A:13
 ```
 *If the adapter is showing as* `hci1` *you will need to edit the* `dev_id` *variable in the scripts to match*
+
+*Update 8/31/23*<br>
+
+I have combined all messages into a single app. You can now run `app.py` to get a list of available options.<br>
+To run the script use `-d (number of message)`  *example* `app.py -d 13`<br>
+```
+python3 app.py
+Please select a message option using -d.
+Available message options:
+1: Airpods
+2: Airpods Pro
+3: Airpods Max
+4: Airpods Gen 2
+5: Airpods Gen 3
+6: Airpods Pro Gen 2
+7: PowerBeats
+8: PowerBeats Pro
+9: Beats Solo Pro
+10: Beats Studio Buds
+11: Beats Flex
+12: BeatsX
+13: Beats Solo3
+14: Beats Studio3
+15: Beats Studio Pro
+16: Beats Fit Pro
+17: Beats Studio Buds+
+18: AppleTV Setup
+19: AppleTV Pair
+20: AppleTV New User
+21: AppleTV AppleID Setup
+22: AppleTV Wireless Audio Sync
+23: AppleTV Homekit Setup
+24: AppleTV Keyboard
+25: AppleTV 'Connecting to Network'
+26: Homepod Setup
+27: Setup New Phone
+28: Transfer Number to New Phone
+29: TV Color Balance
+```
+
 
 # Examples
 
