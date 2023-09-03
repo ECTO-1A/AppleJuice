@@ -18,7 +18,7 @@ The author of this project is not responsible for any possible harm caused by th
 
 This was created in response to the various AppleTV spoof messages being sent out during [DEF CON 31](https://techcrunch.com/2023/08/14/researcher-says-they-were-behind-iphone-popups-at-def-con/). After experiencing it first hand, I had to figure out what was happening. The existing research projects I could find *see credits* had great info but were both a couple years out of date with broken package dependancies, so I decided to take what I could from them and start building from there. 
 
-*This is a work in progress, its only been two weeks since it was launched / showcased at DEF CON and I think I've made some decent progress in getting this working as simply as posible for everyone.  I'll eventually go back and re-work some of the more technical parts of the original projects but wanted to get something fun out there that people can start playing with right away.*
+*This is a work in progress, its only been two weeks since it was launched / showcased at DEF CON and I think I've made some decent progress in getting this working as simply as possible for everyone.  I'll eventually go back and re-work some of the more technical parts of the original projects but wanted to get something fun out there that people can start playing with right away.*
 
 # Hardware Requirements
 
