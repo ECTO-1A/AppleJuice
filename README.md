@@ -1,6 +1,10 @@
 # AppleJuice
 # Apple BLE Proximity Pairing Message Spoofing
 
+~ **Update 9/04/23** ~
+
+Thanks to the amazing work of [Willy-JL](https://github.com/Willy-JL/Willy-JL) this is being added to the [Flipper Zero Xtreme Firmware](https://github.com/Flipper-XFW/Xtreme-Firmware)
+
 ~ **Update 8/31/23** ~
 
 I have combined all messages into a single app. You can now run `app.py` to get a list of available options.<br>
