@@ -1,6 +1,3 @@
-# Description: Apple proximity pairing notification spoofing
-# Message: AppleTV Wireless Audio Sync
-
 # Author: ECTO-1A & SAY-10
 # Github: https://github.com/ECTO-1A
 
