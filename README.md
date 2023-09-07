@@ -1,9 +1,40 @@
 # AppleJuice
 # Apple BLE Proximity Pairing Message Spoofing
 
+# Updates
+<h2>Flipper Zero</h2>
+
 ~ **Update 9/04/23** ~
 
-Thanks to the amazing work of [Willy-JL](https://github.com/Willy-JL/Willy-JL) this is being added to the [Flipper Zero Xtreme Firmware](https://github.com/Flipper-XFW/Xtreme-Firmware)
+Thanks to the amazing work of [Willy-JL](https://github.com/Willy-JL/Willy-JL) this has been added to the [Flipper Zero Xtreme Firmware](https://github.com/Flipper-XFW/Xtreme-Firmware). It's currently in dev and will be officially released in the next update. <br>
+<br>
+**To install it now, follow the guide below from the Xtreme Firmware page to clone and compile the current dev build that contains the Apple BLE Spam app.**
+
+<h2 align="center">Build it yourself:</h2>
+
+> **Warning**
+> We will not give basic support for compiling in our server. This is intended for people that already *know* what they are doing!
+
+```bash
+To download the needed tools:
+$ git clone --recursive --jobs 8 https://github.com/Flipper-XFW/Xtreme-Firmware.git
+$ cd Xtreme-Firmware/
+
+To flash directly to the Flipper (Needs to be connected via USB, qFlipper closed)
+$ ./fbt flash_usb_full
+
+To compile a TGZ package
+$ ./fbt updater_package
+
+To build and launch a single app:
+$ ./fbt launch APPSRC=some_appid
+```
+<br>
+<br>
+
+<h2>ESP-32</h2>
+
+Thanks to [ronaldstoner](https://github.com/ronaldstoner) for porting this over to the ESP-32
 
 ~ **Update 8/31/23** ~
 
@@ -29,7 +60,7 @@ This was created in response to the various AppleTV spoof messages being sent ou
 To run these scripts you need a Linux machine with an internal Bluetooth card or a USB Bluetooth adapter.
 
 All original testing was done on a Lenovo T480 with a built-in Bluetooth adapter.\
-Later tested on Raspberry Pi 3B+ running Kali Linux with a [Zexmte Long Range USB Bluetooth 5.1 Adapter with Dual Antenna](https://zexmte.com/collections/bluetooth-adapter/products/plug-play-long-range-bluetooth-5-1-usb-adapter).<br><br>
+Later tested on Raspberry Pi 3B+ and Raspberry Pi Zero W running Kali Linux with a [Zexmte Long Range USB Bluetooth 5.1 Adapter with Dual Antenna](https://zexmte.com/collections/bluetooth-adapter/products/plug-play-long-range-bluetooth-5-1-usb-adapter).<br><br>
 
 <img src="https://github.com/ECTO-1A/AppleJuice/assets/112792126/a6f2b9fa-ca26-45c1-a440-681beb55c76e" width="300"><br><br>
 
