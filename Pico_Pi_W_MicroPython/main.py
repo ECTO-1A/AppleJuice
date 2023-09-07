@@ -1,6 +1,6 @@
 # Raspberry Pico Pi W - Micropython implementation of Apple Juice
 # Author: Manu
-# Github: https://github.com/r0day1day
+# Github: https://github.com/0day1day
 
 # Based on the previous work of chipik / _hexway / ECTO-1A & SAY-10
 
