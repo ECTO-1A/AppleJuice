@@ -7,3 +7,5 @@ The ESP32 Arduino version would run on this device, but without any LED or displ
 * BLE Logic based on the ESP32 version
 * Menu with button selection UI added
 * LED flashes faintly while advertising
+
+![Demo](applejuice-stick-c-plus.png?raw=true "Title")
