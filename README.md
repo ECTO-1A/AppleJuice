@@ -34,6 +34,10 @@ $ ./fbt launch APPSRC=some_appid
 
 Thanks to [ronaldstoner](https://github.com/ronaldstoner) for porting this over to the ESP-32
 
+### Android
+
+Check out this in-depth walk though by [Mobile Hacker](https://www.mobile-hacker.com/2023/09/07/spoof-ios-devices-with-bluetooth-pairing-messages-using-android/) about running AppleJuice on a rooted Android phone.
+
 ## About This Project
 This was created in response to the various AppleTV spoof messages being sent out during [DEF CON 31](https://techcrunch.com/2023/08/14/researcher-says-they-were-behind-iphone-popups-at-def-con/). After experiencing it first hand, I had to figure out what was happening. The existing research projects I could find (see *credits*) had great info but were both a couple years out of date with broken package dependencies, so I decided to take what I could from them and start building from there.
 
