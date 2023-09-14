@@ -7,6 +7,8 @@
 > The author of this project is not responsible for any possible harm caused by the materials of this project.
 
 ## Updates
+### After [Techryptic's attempt to steal the work of myself and WillyJL](https://techcrunch.com/2023/09/05/flipper-zero-hacking-iphone-flood-popups/), Willy has taken the time to give an insanely in-depth timeline of the events and proof of the work being stolen (Git and my typos dont lie!) Check out the full report below and please help us spread the word that the person who has been all over the news outlets claiming this as their work, stole the code and gave none of the actual developers credit.<br>
+### [The Controversy Behind Apple BLE Spam](https://willyjl.dev/blog/the-controversy-behind-apple-ble-spam)
 ### Flipper Zero
 
 Thanks to the amazing work of [Willy-JL](https://github.com/Willy-JL/Willy-JL) this has been added to the [Flipper Zero Xtreme Firmware](https://github.com/Flipper-XFW/Xtreme-Firmware). It's currently in dev and will be officially released in the next update.
