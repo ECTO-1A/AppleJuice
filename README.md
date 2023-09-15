@@ -7,6 +7,8 @@
 > The author of this project is not responsible for any possible harm caused by the materials of this project.
 
 ## Updates
+### After [Techryptic's attempt to steal the work of myself and WillyJL](https://techcrunch.com/2023/09/05/flipper-zero-hacking-iphone-flood-popups/), Willy has taken the time to give an insanely in-depth timeline of the events and proof of the work being stolen (Git and my typos dont lie!) Check out the full report below and please help us spread the word that the person who has been all over the news outlets claiming this as their work, stole the code and gave none of the actual developers credit.<br>
+### [The Controversy Behind Apple BLE Spam](https://willyjl.dev/blog/the-controversy-behind-apple-ble-spam)
 ### Flipper Zero
 
 Thanks to the amazing work of [Willy-JL](https://github.com/Willy-JL/Willy-JL) this has been added to the [Flipper Zero Xtreme Firmware](https://github.com/Flipper-XFW/Xtreme-Firmware). It's currently in dev and will be officially released in the next update.
@@ -33,6 +35,10 @@ $ ./fbt launch APPSRC=some_appid
 ### ESP-32
 
 Thanks to [ronaldstoner](https://github.com/ronaldstoner) for porting this over to the ESP-32
+
+### Android
+
+Check out this in-depth walk though by [Mobile Hacker](https://www.mobile-hacker.com/2023/09/07/spoof-ios-devices-with-bluetooth-pairing-messages-using-android/) about running AppleJuice on a rooted Android phone.
 
 ## About This Project
 This was created in response to the various AppleTV spoof messages being sent out during [DEF CON 31](https://techcrunch.com/2023/08/14/researcher-says-they-were-behind-iphone-popups-at-def-con/). After experiencing it first hand, I had to figure out what was happening. The existing research projects I could find (see *credits*) had great info but were both a couple years out of date with broken package dependencies, so I decided to take what I could from them and start building from there.
@@ -161,5 +167,5 @@ Available message options:
 ### Credit
 - [FuriousMAC](https://github.com/furiousMAC/continuity) and [Hexway](https://github.com/hexway/apple_bleee) for all the prior research on Apple BLE, Continuity, and building the Wireshark disector.
 - [Jae Bochs](https://infosec.exchange/@jb0x168/110879394826675242) for [exposing this to me at DEF CON 31](https://techcrunch.com/2023/08/14/researcher-says-they-were-behind-iphone-popups-at-def-con/) which made me jump into learning about BLE.
-- Guillaume Celosia and Mathieu Cunche for reverse engineering [Proximity Pairing](https://petsymposium.org/2020/files/papers/issue1/popets-2020-0003.pdf">Discontinued) 
+- Guillaume Celosia and Mathieu Cunche for reverse engineering [Proximity Pairing](https://petsymposium.org/2020/files/papers/issue1/popets-2020-0003.pdf") 
 
