@@ -12,6 +12,6 @@ trim_trailing_whitespace = true
 indent_style = space
 indent_size = 4
 
-[*.yaml]
-indent_style = space
+[*.{ino,h,cpp,hpp}]
 indent_size = 2
+
