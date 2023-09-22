@@ -2,7 +2,7 @@
 # Github: https://github.com/ECTO-1A
 
 # Based on the previous work of chipik / _hexway
-
+import random
 import argparse
 import bluetooth._bluetooth as bluez
 from time import sleep
@@ -92,16 +92,20 @@ def main():
     parser = argparse.ArgumentParser(description=help_desc, formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('-i', '--interval', default=200, type=int, help='Advertising interval (default 200))')
     parser.add_argument('-d', '--data', type=int, help='Select a message to send (e.g., -d 1)')
+    
+    # Add random argument
+    parser.add_argument('-r', '--random', action='store_true', help='Randomly loop through advertising data')
+    
     args = parser.parse_args()
 
-    if args.data is None:
-        print("Please select a message option using -d.")
+    if args.data is None and not args.random:
+        print("Please select a message option using -d or use --random for random selection.")
         print("Available message options:")
         for option, description in bt_data_options.items():
             print(f"{option}: {description}")
         return
 
-    if args.data not in bt_data_options:
+    if args.data and args.data not in bt_data_options:
         print(f"Invalid data option: {args.data}")
         print("Available data options:")
         for option, description in bt_data_options.items():
@@ -112,16 +116,6 @@ def main():
     dev_id = 0 
     toggle_device(dev_id, True)
 
-    # Define the bt_data based on the selected option
-    selected_option = args.data
-
-    # Assign selection to bt_data
-    bt_data = hex_data.get(selected_option)
-
-    if bt_data is None:
-        print("Invalid data option: {args.data}")
-        return
-
     try:
         sock = bluez.hci_open_dev(dev_id)
     except Exception as e:
@@ -131,9 +125,19 @@ def main():
     print("Advertising Started... Press Ctrl+C to Stop")
 
     try:
-        start_le_advertising(sock, adv_type=0x03, min_interval=args.interval, max_interval=args.interval, data=bt_data)
-        while True:
-            sleep(2)
+        if args.random:
+            while True:
+                selected_option = random.choice(list(bt_data_options.keys()))
+                bt_data = hex_data.get(selected_option)
+                start_le_advertising(sock, adv_type=0x03, min_interval=args.interval, max_interval=args.interval, data=bt_data)
+                sleep(2)
+                stop_le_advertising(sock)
+        else:
+            selected_option = args.data
+            bt_data = hex_data.get(selected_option)
+            start_le_advertising(sock, adv_type=0x03, min_interval=args.interval, max_interval=args.interval, data=bt_data)
+            while True:
+                sleep(2)
     except KeyboardInterrupt:
         stop_le_advertising(sock)
     except Exception as e:
@@ -142,3 +146,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
