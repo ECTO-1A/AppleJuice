@@ -1,8 +1,6 @@
 # AppleJuice MicroPython Project Documentation
-<video controls>
-  <source src="Media/AppleJuice_picopiw.webm" type="video/webm">
-</video>
 
+![image](https://github.com/0day1day/AppleJuice/assets/2527187/95744551-9305-4660-9c5b-4f3e25c447be)
 
 ## Overview
 
