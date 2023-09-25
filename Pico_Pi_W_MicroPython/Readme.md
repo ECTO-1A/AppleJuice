@@ -4,8 +4,7 @@
 
 ## Overview
 
-This project is an adaptation of the [AppleJuice project](https://github.com/ECTO-1A/AppleJuice) to MicroPython, designed to work specifically with the Raspberry Pi Pico W. It includes two versions: a Command Line Interface (CLI) accessible from any terminal with REPL and a Web version that functions in modern web browsers.
-
+This project is an adaptation of the [AppleJuice project](https://github.com/ECTO-1A/AppleJuice) to MicroPython.
 ### Hardware and Software Specifications
 
 - MicroPython Version: MicroPython v1.20.0-487-g00930b213 (You can download the latest version from the [official website](https://micropython.org/). Make sure to choose the version for the Pico Pi W.)
