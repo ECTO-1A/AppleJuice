@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" href="/assets/images/bluetooth.png" type="image/x-icon">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BLE Server</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #282c34;
+            font-size: 2vmin;
+            font-family: monospace;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #e4bb68;
+            flex-direction: column;
+            gap: 2vmin;
+        }
+
+        h1 {
+            margin-bottom: 1.5vmin;
+            text-align: center;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5vmin;
+            width: 40vmin;
+            background: #282c34;
+            padding: 2vmin;
+            border: 2px solid #e4bb68;
+            border-radius: 0.5vmin;
+        }
+
+        label, input, select, button {
+            font-family: monospace;
+        }
+
+        select, input[type="submit"] {
+            padding: 0.5vmin;
+            font-size: 2vmin;
+            border: 2px solid #e4bb68;
+            background: #3a3f4b;
+            color: #e4bb68;
+            border-radius: 0.5vmin;
+        }
+
+        select:focus, input[type="submit"]:focus {
+            outline: none;
+            border-color: #e06c75;
+        }
+
+        input[type="submit"] {
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        input[type="submit"]:hover {
+            background: #e06c75;
+        }
+
+        div {
+            font-size: 1.5em;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #e4bb68;
+            padding: 10px 20px;
+            border-radius: 5px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+        }
+        footer {
+            font-size: 12px;
+            text-align: center; 
+            background-color: #333; 
+            color: #fff; 
+            padding: 10px; 
+        }
+    
+        footer a {
+            color: #f0ff00; 
+            text-decoration: none; 
+        }
+    
+        footer a:hover {
+            text-decoration: underline;
+        }
+        </style>
+</head>
+<body>
+    <header>
+        <img src="/assets/images/logo.png" alt="Logo de la página">
+    </header>
+    <h1>🍏 Select Payload 🍎</h1>
+    <form id="bleForm" method="post">
+        <select name="payload">
+            {payload_options}
+        </select>
+        <input type="submit" name="action" value="Start Advertising">
+        <input type="submit" name="action" value="Stop Advertising">
+    </form>
+    <footer>
+        This project is a fork of an original work adapted for Pico Pi W microcontrollers. Original project by <a href="https://github.com/ECTO-1A/AppleJuice" target="_blank">ECTO-1A</a>.
+    </footer>
+    
+    
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const messageContainer = document.createElement("div");
+            messageContainer.style.opacity = "0";
+            messageContainer.style.transition = "opacity 0.5s";
+            messageContainer.style.position = "fixed";
+            messageContainer.style.top = "20px";
+            messageContainer.style.left = "50%";
+            messageContainer.style.transform = "translateX(-50%)";
+            document.body.appendChild(messageContainer);
+        
+            document.querySelector('#bleForm').addEventListener("submit", function(e) {
+                e.preventDefault();
+                
+                const action = e.submitter.value;
+                const endpoint = action === "Start Advertising" ? "/start" : "/stop";
+                
+                const requestData = {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    }
+                };
+
+                if (action === "Start Advertising") {
+                    requestData.body = new URLSearchParams({
+                        'payload': document.querySelector('select[name="payload"]').value
+                    });
+                }
+
+                fetch(endpoint, requestData)
+                .then(response => response.text())
+                .then(text => {
+                    messageContainer.textContent = text;
+                    showMessage();
+                });
+            });
+        
+            function showMessage() {
+                messageContainer.style.opacity = "1";
+                setTimeout(() => {
+                    messageContainer.style.opacity = "0";
+                }, 3000);
+            }
+        });
+     </script>
+</body>
+</html>
