@@ -8,9 +8,9 @@
 
 ## Updates
 
-**9/21/23** <br>
+**9/21/2023** <br>
 <br>
-Thanks to [0DayCTF](https://github.com/0dayctf) the random option has been added!<br> 
+Thanks to [0DayCTF](https://github.com/0dayctf) the random option has been added!<br>
 <br>
 *To run with random :* <br>
 ```python3 app.py --random``` <br>
@@ -54,6 +54,9 @@ Thanks to [ronaldstoner](https://github.com/ronaldstoner) for porting this over 
 
 Check out this in-depth walk though by [Mobile Hacker](https://www.mobile-hacker.com/2023/09/07/spoof-ios-devices-with-bluetooth-pairing-messages-using-android/) about running AppleJuice on a rooted Android phone.
 
+You can find converted values [here](docs/nrf-connect-values.md)
+
+
 ## About This Project
 This was created in response to the various AppleTV spoof messages being sent out during [DEF CON 31](https://techcrunch.com/2023/08/14/researcher-says-they-were-behind-iphone-popups-at-def-con/). After experiencing it first hand, I had to figure out what was happening. The existing research projects I could find (see *credits*) had great info but were both a couple years out of date with broken package dependencies, so I decided to take what I could from them and start building from there.
 
@@ -91,10 +94,10 @@ sudo apt update && sudo apt install -y bluez libpcap-dev libev-dev libnl-3-dev l
 > :warning: **Warning** <br>
 > The `pybluez` library is broken on GitHub and needs to be installed manually
 ```bash
-Download the latest version 
+Download the latest version
 pip install git+https://github.com/pybluez/pybluez.git#egg=pybluez
 
-pycrypto is not maintained, be sure to install pycryptodome instead 
+pycrypto is not maintained, be sure to install pycryptodome instead
 pip install pycryptodome
 ```
 
@@ -103,7 +106,7 @@ pip install pycryptodome
 sudo pip install -r requirements.txt
 ```
 ### Execute scripts without `sudo`
-> To be able to run without sudo, you need to set the capabilities of the python binary to allow it to access raw sockets. This is done with the following command 
+> To be able to run without sudo, you need to set the capabilities of the python binary to allow it to access raw sockets. This is done with the following command
 
 ```bash
 sudo setcap cap_net_raw,cap_net_admin+eip $(eval readlink -f $(which python))
@@ -122,19 +125,19 @@ Devices:
     hci0    00:00:7C:00:3A:13
 ```
 > :memo: **Note** <br>
-> If the adapter is showing as `hci1` you will need to edit the `dev_id` variable in the scripts to match
+> If the adapter is showing as `hci1` you will need to specify `--bt-dev-id` parameter of the script
 
 ### Available options
 
 All messages have been combined into a single app. You can now run `app.py` to get a list of available options.<br>
-To run the script use `-d (number of message)`  
-> **Example** <br> 
+To run the script use `-d (number of message)`
+> **Example** <br>
 > `app.py -d 13`
 
 ```python
 python3 app.py
-Please select a message option using -d.
-Available message options:
+Please select a message option using -d or --device-name. Use --random for random selection.
+Available message options and device names:
 1: Airpods
 2: Airpods Pro
 3: Airpods Max
@@ -168,18 +171,19 @@ Available message options:
 
 ## Examples
 
-`beatssolopro.py`
+`python3 app.py --device-name "Beats Solo Pro"`
 > **Model**: Beats Solo Pro
 
 <img src="https://github.com/ECTO-1A/AppleJuice/assets/112792126/c3218a09-7aef-483b-957d-f3c19a55fc08" width="300">
 
-`airpods_max.py`
+`python3 app.py --device-name "Airpods Max"`
 > **Model**: Airpods Max
 
 <img src="https://github.com/ECTO-1A/AppleJuice/assets/112792126/5eea40e8-d7c1-4324-9f3d-1425228d0458" width="300">
 
+[More examples](docs/notifications.md)
+
 ### Credit
 - [FuriousMAC](https://github.com/furiousMAC/continuity) and [Hexway](https://github.com/hexway/apple_bleee) for all the prior research on Apple BLE, Continuity, and building the Wireshark disector.
 - [Jae Bochs](https://infosec.exchange/@jb0x168/110879394826675242) for [exposing this to me at DEF CON 31](https://techcrunch.com/2023/08/14/researcher-says-they-were-behind-iphone-popups-at-def-con/) which made me jump into learning about BLE.
-- Guillaume Celosia and Mathieu Cunche for reverse engineering [Proximity Pairing](https://petsymposium.org/2020/files/papers/issue1/popets-2020-0003.pdf") 
-
+- Guillaume Celosia and Mathieu Cunche for reverse engineering [Proximity Pairing](https://petsymposium.org/2020/files/papers/issue1/popets-2020-0003.pdf")
