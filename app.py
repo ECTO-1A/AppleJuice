@@ -6,6 +6,7 @@ import random
 import argparse
 import bluetooth._bluetooth as bluez
 from time import sleep
+from typing import Sequence
 from utils.bluetooth_utils import toggle_device, start_le_advertising, stop_le_advertising
 
 # Add a docstring to describe the purpose of the script
@@ -51,7 +52,7 @@ bt_data_options = {
     28: "Transfer Number to New Phone",
     29: "TV Color Balance"
 
-    # Add more options as needed
+    # Add more options as needed (don't forget to review get_bt_data function below)
 }
 
 # Hex data map
@@ -85,22 +86,45 @@ hex_data = {
     27: (0x16, 0xff, 0x4c, 0x00, 0x04, 0x04, 0x2a, 0x00, 0x00, 0x00, 0x0f, 0x05, 0xc1, 0x09, 0x60, 0x4c, 0x95, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00),
     28: (0x16, 0xff, 0x4c, 0x00, 0x04, 0x04, 0x2a, 0x00, 0x00, 0x00, 0x0f, 0x05, 0xc1, 0x02, 0x60, 0x4c, 0x95, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00),
     29: (0x16, 0xff, 0x4c, 0x00, 0x04, 0x04, 0x2a, 0x00, 0x00, 0x00, 0x0f, 0x05, 0xc1, 0x1e, 0x60, 0x4c, 0x95, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00),
-    # Add More as needed
+
+    # Add more as needed (don't forget to review get_bt_data function below)
 }
+
+
+def get_bt_data(option: int, random_charge=False) -> Sequence[int] | None:
+    print(option)
+    bt_data = hex_data.get(option)
+
+    if not bt_data:
+        return
+    if not random_charge:
+        return bt_data
+    name = bt_data_options[option]
+    if "Airpods" not in name and "Beats" not in name:
+        return bt_data
+
+    left_speaker = (random.randint(1, 100),)
+    right_speaker = (random.randint(1, 100),)
+    case = (random.randint(128, 228),)
+    return bt_data[:15] + left_speaker + right_speaker + case + bt_data[-12:]
+
 
 def main():
     parser = argparse.ArgumentParser(description=help_desc, formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('-i', '--interval', default=200, type=int, help='Advertising interval (default 200))')
     parser.add_argument('-d', '--data', type=int, help='Select a message to send (e.g., -d 1)')
-    
+    parser.add_argument('-b', '--bt-dev-id', default=0, type=int, help='Bluetooth device ID (default 0)')
+    parser.add_argument('--device-name', type=str, help='Specify a device name (e.g., --device-name "AirPods Pro")')
+
     # Add random argument
     parser.add_argument('-r', '--random', action='store_true', help='Randomly loop through advertising data')
-    
+    parser.add_argument('--random-charge', action='store_true', help='Send random charge values for headphones')
+
     args = parser.parse_args()
 
-    if args.data is None and not args.random:
-        print("Please select a message option using -d or use --random for random selection.")
-        print("Available message options:")
+    if (args.data is None) and (args.device_name is None) and not args.random:
+        print("Please select a message option using -d or --device-name. Use --random for random selection.")
+        print("Available message options and device names:")
         for option, description in bt_data_options.items():
             print(f"{option}: {description}")
         return
@@ -111,9 +135,16 @@ def main():
         for option, description in bt_data_options.items():
             print(f"{option}: {description}")
         return
-    
+
+    if args.device_name and args.device_name.lower() not in [_.lower() for _ in bt_data_options.values()]:
+        print(f"Invalid device name: {args.device_name}")
+        print("Available device names:")
+        for device_name in bt_data_options.values():
+            print(device_name)
+        return
+
     # the default Bluetooth device is hci0
-    dev_id = 0 
+    dev_id = args.bt_dev_id
     toggle_device(dev_id, True)
 
     try:
@@ -128,13 +159,13 @@ def main():
         if args.random:
             while True:
                 selected_option = random.choice(list(bt_data_options.keys()))
-                bt_data = hex_data.get(selected_option)
+                bt_data = get_bt_data(selected_option, args.random_charge)
                 start_le_advertising(sock, adv_type=0x03, min_interval=args.interval, max_interval=args.interval, data=bt_data)
                 sleep(2)
                 stop_le_advertising(sock)
         else:
-            selected_option = args.data
-            bt_data = hex_data.get(selected_option)
+            selected_option = args.data or list(bt_data_options.keys())[[_.lower() for _ in bt_data_options.values()].index(args.device_name.lower())]
+            bt_data = get_bt_data(selected_option, args.random_charge)
             start_le_advertising(sock, adv_type=0x03, min_interval=args.interval, max_interval=args.interval, data=bt_data)
             while True:
                 sleep(2)
