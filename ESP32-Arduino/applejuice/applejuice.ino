@@ -11,7 +11,8 @@
 BLEAdvertising *pAdvertising;  // global variable
 
 // User selectable variables
-int deviceType = 4; // 1 for Airpods, 2 for Airpods Pro, 3 for Airpods Max, 4 for...
+//int deviceType = 4; // 1 for Airpods, 2 for Airpods Pro, 3 for Airpods Max, 4 for...
+int deviceType = 27; // 1 for Airpods, 2 for Airpods Pro, 3 for Airpods Max, 4 for...
 int delaySeconds = 2; // delay in seconds
 int advType = 2; 
   // 0 - ADV_TYPE_IND
@@ -145,6 +146,12 @@ switch(deviceType) {
   case 26:
     data = dataTVColorBalance;
     break;
+  case 27:
+    data = dataTransferNumber;
+    break;
+  case 28:
+    data = dataSetupNewPhone;
+    break;
   default:
     data = dataAirpods; // default to dataAirpods if no valid deviceType is provided
     break;
@@ -173,7 +180,11 @@ switch(deviceType) {
   
 
   // Set up the advertisement data
-  oAdvertisementData.addData(std::string((char*)data, sizeof(dataAirpods)));
+      if (deviceType >= 18){
+        oAdvertisementData.addData(std::string((char*)data, sizeof(dataAppleTVPair)));
+      } else {
+        oAdvertisementData.addData(std::string((char*)data, sizeof(dataAirpods)));
+      }
   pAdvertising->setAdvertisementData(oAdvertisementData);
 }
 
