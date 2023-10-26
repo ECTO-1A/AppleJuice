@@ -2,12 +2,14 @@
 # Github: https://github.com/ECTO-1A
 
 # Based on the previous work of chipik / _hexway
-from enum import Enum, auto
 import random
 import argparse
-import bluetooth._bluetooth as bluez
 from time import sleep
+from enum import Enum, auto
 from typing import Sequence
+
+import bluetooth._bluetooth as bluez
+
 from utils.bluetooth_utils import change_internal_mac_addr, get_internal_mac_addr, toggle_device, start_le_advertising, stop_le_advertising
 
 # Add a docstring to describe the purpose of the script
@@ -511,7 +513,8 @@ def main():
             while True:
                 bt_data, *_ = make_packet_windows(name=args.windows_text)
                 print(bt_data)
-                adv_type = args.random_adv and random.randint(0x01,0x04) or 0x03  # TODO check valid ones
+                # adv_type = args.random_adv and random.randint(0x01,0x04) or 0x03  # TODO check valid ones
+                adv_type = args.random_adv and random.randint(0x02,0x03) or 0x03
                 if args.random_mac:
                     random_mac = ":".join([f"{random.randint(0x00, 0xff):02x}" for _ in range(6)])
                     change_internal_mac_addr(sock, random_mac)

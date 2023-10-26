@@ -138,35 +138,36 @@ To run the script use `-d (number of message)`
 python3 app.py
 Please select a message option using -d or --device-name. Use --random for random selection.
 Available message options and device names:
-1: Airpods
-2: Airpods Pro
-3: Airpods Max
-4: Airpods Gen 2
-5: Airpods Gen 3
-6: Airpods Pro Gen 2
-7: PowerBeats
+1: AirPods
+2: AirPods Pro
+3: AirPods Max
+4: AirPods 2nd Gen
+5: AirPods 3rd Gen
+6: AirPods Pro 2nd Gen
+7: PowerBeats 3
 8: PowerBeats Pro
 9: Beats Solo Pro
 10: Beats Studio Buds
 11: Beats Flex
-12: BeatsX
-13: Beats Solo3
-14: Beats Studio3
+12: Beats X
+13: Beats Solo 3
+14: Beats Studio 3
 15: Beats Studio Pro
 16: Beats Fit Pro
 17: Beats Studio Buds+
+
 18: AppleTV Setup
 19: AppleTV Pair
-20: AppleTV New User
+20: AppleTV Join This AppleTV
 21: AppleTV AppleID Setup
 22: AppleTV Wireless Audio Sync
-23: AppleTV Homekit Setup
+23: AppleTV HomeKit Setup
 24: AppleTV Keyboard
-25: AppleTV 'Connecting to Network'
-26: Homepod Setup
-27: Setup New Phone
-28: Transfer Number to New Phone
-29: TV Color Balance
+25: AppleTV Connecting...
+26: AppleTV Color Balance
+27: HomePod Setup
+28: Setup New iPhone
+29: Transfer Phone Number
 ```
 
 ## Examples
