@@ -11,6 +11,7 @@ from typing import Sequence
 import bluetooth._bluetooth as bluez
 
 from utils.bluetooth_utils import change_internal_mac_addr, get_internal_mac_addr, toggle_device, start_le_advertising, stop_le_advertising
+from utils.fast_pair_models import all_fp_models
 
 # Add a docstring to describe the purpose of the script
 help_desc = '''
@@ -246,69 +247,12 @@ def make_packet(packet_type: ContinuityType, *, model: int = 0, action: int = 0)
     raise NotImplementedError()
 
 
-fp_models = {
-    # Genuine actions
-    "Set Up Device": 0x00000C,
-
-    # Genuine non-production/forgotten (good job Google)
-    "Bisto CSR8670 Dev Board": 0x0001F0,  # non visible and breaks network
-    "Arduino 101": 0x000047,
-    "Anti-Spoof Test": 0x00000A,
-    "Anti-Spoof Test 2": 0x0A0000,
-    "Google Gphones": 0x00000B,
-    "Google Gphones 2": 0x0B0000,
-    "Google Gphones 3": 0x0C0000,
-    "Test 00000D": 0x00000D,
-    "Android Auto": 0x000007,
-    "Android Auto 2": 0x070000,
-    "Foocorp Foophones": 0x000008,
-    "Foocorp Foophones 2": 0x080000,
-    "Test Android TV": 0x000009,
-    "Test Android TV 2": 0x090000,
-    "Fast Pair Headphones": 0x000048,
-    "Fast Pair Headphones 2": 0x000049,
-
-    # Genuine devices
-    "Bose NC 700": 0xCD8256,
-    "Bose QuietComfort 35 II": 0x0000F0,
-    "JBL Flip 6": 0x821F66,
-    "JBL Buds Pro": 0xF52494,
-    "JBL Live 300TWS": 0x718FA4,
-    "JBL Everest 110GA": 0x0002F0,
-    "Pixel Buds": 0x92BBBD,
-    "Google Pixel buds": 0x000006,
-    "Google Pixel buds 2": 0x060000,
-    "Sony XM5": 0xD446A7,
-    "Sony WF-1000XM4": 0x2D7A23,
-    "Razer Hammerhead TWS": 0x0E30C3,
-    "Razer Hammerhead TWS X": 0x72EF8D,
-    "Soundcore Spirit Pro GVA": 0x72FB00,
-    "LG HBS-835S": 0x0003F0,
-
-    # Custom debug popups
-    "Flipper Zero": 0xD99CA1,
-    "Free Robux": 0x77FF67,
-    "Free VBucks": 0xAA187F,
-    "Rickroll": 0xDCE9EA,
-    "Animated Rickroll": 0x87B25F,  # non visible and breaks network
-    "Boykisser": 0xF38C02,
-    "BLM": 0x1448C9,
-    "Xtreme": 0xD5AB33,
-    "Xtreme Cta": 0x0C0B67,
-    "Talking Sasquach": 0x13B39D,
-    "Mobile Hacker": 0x3D45DC,
-    "ClownMaster": 0xAA1FE1,  # non visible and breaks network
-    "Obama": 0x7C6CDB,
-    "Ryanair": 0x005EF9,
-    "FBI": 0xE2106F,
-    "Tesla": 0xB37A62,
-    "Durka": 0x6B4025,
-}
-
 def make_packet_android(*, model: int = 0) -> tuple[Sequence[int], int]:
     if model == 0:
-        model_name = random.choice(list(fp_models))
-        model = fp_models[model_name]
+        model_name = random.choice(list(all_fp_models))
+        model = all_fp_models[model_name]
+        if isinstance(model, list):
+            model = random.choice(model)
     size = 14
     packet = [0] * size
     i = 0
