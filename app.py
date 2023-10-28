@@ -478,7 +478,7 @@ def main():
                 stop_le_advertising(sock)
         elif args.custom_crash:
             while True:
-                bt_data, *_ = make_custom_crash_data()
+                bt_data = make_custom_crash_data()
                 adv_type = args.random_adv and random.randint(0x01,0x04) or 0x03  # TODO check valid ones
                 if args.random_mac:
                     random_mac = ":".join([f"{random.randint(0x00, 0xff):02x}" for _ in range(6)])
