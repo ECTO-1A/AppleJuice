@@ -80,6 +80,16 @@ Later tested on Raspberry Pi 3B+ and Raspberry Pi Zero W running Kali Linux with
 ## Installation Instructions
 Please follow in this exact order or you might run into issues with bluetooth dependencies.
 
+### kali (tested only on pi-zero-w)
+If you use kali, you only need to run this steps:
+```bash
+sudo apt update && sudo apt install -y bluez libpcap-dev libev-dev libnl-3-dev libnl-genl-3-dev libnl-route-3-dev cmake libbluetooth-dev
+pip install git+https://github.com/pybluez/pybluez.git#egg=pybluez
+sudo setcap cap_net_raw,cap_net_admin+eip $(eval readlink -f $(which python))
+git clone https://github.com/ECTO-1A/AppleJuice.git && cd ./AppleJuice
+python app.py -i 20 -t 0.5 -r
+```
+
 ### Clone the Main Repo
 ```bash
 git clone https://github.com/ECTO-1A/AppleJuice.git && cd ./AppleJuice
