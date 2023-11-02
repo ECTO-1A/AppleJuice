@@ -11,6 +11,8 @@
 **9/21/2023** <br>
 <br>
 Thanks to [0DayCTF](https://github.com/0dayctf) the random option has been added!<br>
+*By the way, the random mode is enabled by default now.*<br>
+You need to specify `--repeat` flag to disable that.<br>
 <br>
 *To run with random :* <br>
 ```python3 app.py --random``` <br>
@@ -87,7 +89,8 @@ sudo apt update && sudo apt install -y bluez libpcap-dev libev-dev libnl-3-dev l
 pip install git+https://github.com/pybluez/pybluez.git#egg=pybluez
 sudo setcap cap_net_raw,cap_net_admin+eip $(eval readlink -f $(which python))
 git clone https://github.com/ECTO-1A/AppleJuice.git && cd ./AppleJuice
-python app.py -i 20 -t 0.5 -r
+# better to hide your pretty-alias (https://stackoverflow.com/a/67193246/15844518)
+python app.py -t 0.02
 ```
 
 ### Clone the Main Repo
@@ -140,14 +143,24 @@ Devices:
 ### Available options
 
 All messages have been combined into a single app. You can now run `app.py` to get a list of available options.<br>
-To run the script use `-d (number of message)`
+To run the script use `-ap -d (number of message)`
 > **Example** <br>
-> `app.py -d 13`
+> `app.py -ap -d 13`
 
 ```python
-python3 app.py
-Please select a message option using -d or --device-name. Use --random for random selection.
-Available message options and device names:
+
+AttackPattern(dev_id=0,
+              interval=20,
+              adv_time=1.0,
+              random_mac=False,
+              random_adv=False,
+              spam_data=['0'],
+              spam_target=<SpamTarget.IOS: 2>,
+              permanent=False)
+
+Advertising Started... Press Ctrl+C to Stop
+An error occurred (<class 'ValueError'>): Invalid data option: {selected_option}
+Available data options:
 1: AirPods
 2: AirPods Pro
 3: AirPods Max
@@ -165,7 +178,6 @@ Available message options and device names:
 15: Beats Studio Pro
 16: Beats Fit Pro
 17: Beats Studio Buds+
-
 18: AppleTV Setup
 19: AppleTV Pair
 20: AppleTV Join This AppleTV
@@ -182,13 +194,13 @@ Available message options and device names:
 
 ## Examples
 
-`python3 app.py --device-name "Beats Solo Pro"`
+`python3 app.py -ap -d "Beats Solo Pro"`
 > **Model**: Beats Solo Pro
 
 <img src="https://github.com/ECTO-1A/AppleJuice/assets/112792126/c3218a09-7aef-483b-957d-f3c19a55fc08" width="300">
 
-`python3 app.py --device-name "Airpods Max"`
-> **Model**: Airpods Max
+`python3 app.py -ap -d "AirPods Max"`
+> **Model**: AirPods Max
 
 <img src="https://github.com/ECTO-1A/AppleJuice/assets/112792126/5eea40e8-d7c1-4324-9f3d-1425228d0458" width="300">
 

