@@ -30,17 +30,21 @@ from errno import EALREADY
 
 # import PyBluez
 import bluetooth._bluetooth as bluez
+from bluetooth import read_local_bdaddr
 
 __all__ = ('toggle_device', 'set_scan',
            'enable_le_scan', 'disable_le_scan', 'parse_le_advertising_events',
            'start_le_advertising', 'stop_le_advertising',
-           'raw_packet_to_str')
+           'raw_packet_to_str',
+           'get_internal_mac_addr', 'change_internal_mac_addr')
 
 LE_META_EVENT = 0x3E
 LE_PUBLIC_ADDRESS = 0x00
 LE_RANDOM_ADDRESS = 0x01
 
 OGF_LE_CTL = 0x08
+OGF_VENDOR_CMD = 0x3F
+OCF_INQUIRY = 0x0001
 OCF_LE_SET_SCAN_PARAMETERS = 0x000B
 OCF_LE_SET_SCAN_ENABLE = 0x000C
 OCF_LE_CREATE_CONN = 0x000D
@@ -353,6 +357,15 @@ def parse_le_advertising_events(sock, mac_addr=None, packet_length=None,
         print("\nRestore previous socket filter")
         sock.setsockopt(bluez.SOL_HCI, bluez.HCI_FILTER, old_filter)
         raise
+
+
+def get_internal_mac_addr(bt_dev_id=0):
+    return read_local_bdaddr()[bt_dev_id]
+
+
+def change_internal_mac_addr(sock, mac_addr="12:34:56:78:90:AB"):
+    """https://community.infineon.com/t5/Wi-Fi-Bluetooth-for-Linux/How-to-change-Bluetooth-MAC-address-on-Raspberry-Pi-4/m-p/179476"""
+    bluez.hci_send_cmd(sock, OGF_VENDOR_CMD, OCF_INQUIRY, bluez.str2ba(mac_addr))
 
 """
 def hci_le_add_white_list(int dd, const bdaddr_t *bdaddr, uint8_t type, int to)
