@@ -164,7 +164,7 @@ static void gatts_profile_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_
                 ESP_LOGE(GATTS_TABLE_TAG, "config adv data failed, error code = %x", ret);
             }
             adv_config_done |= ADV_CONFIG_FLAG;
-            esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_ADV,ESP_PWR_LVL_N6);
+            esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_ADV,ESP_PWR_LVL_P9);
             
         }
        	    break;
