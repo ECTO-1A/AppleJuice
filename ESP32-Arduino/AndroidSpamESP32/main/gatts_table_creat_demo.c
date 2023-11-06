@@ -8,11 +8,7 @@
 
 /****************************************************************************
 *
-* This demo showcases creating a GATT database using a predefined attribute table.
-* It acts as a GATT server and can send adv data, be connected by client.
-* Run the gatt_client demo, the client demo will automatically connect to the gatt_server_service_table demo.
-* Client demo will enable GATT server's notify after connection. The two devices will then exchange
-* data.
+* This demo showcases creating a simple BLE device which can be used to spam Android Devices
 *
 ****************************************************************************/
 
