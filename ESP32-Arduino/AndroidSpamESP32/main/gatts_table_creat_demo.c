@@ -53,55 +53,7 @@ static uint8_t adv_config_done       = 0;
 
 uint16_t heart_rate_handle_table[HRS_IDX_NB];
 
-typedef struct {
-    uint8_t                 *prepare_buf;
-    int                     prepare_len;
-} prepare_type_env_t;
 
-// static prepare_type_env_t prepare_write_env;
-
-// #define CONFIG_SET_RAW_ADV_DATA 
-#ifdef CONFIG_SET_RAW_ADV_DATA
-static uint8_t raw_adv_data[] = {
-        /* flags */
-        0x02, 0x01, 0x06,
-        /* tx power*/
-        0x02, 0x0a, 0xeb,
-        /* service uuid */
-        0x03, 0x03, 0xFF, 0x00,
-        /* device name */
-        0x0f, 0x09, 'E', 'S', 'P', '_', 'G', 'A', 'T', 'T', 'S', '_', 'D','E', 'M', 'O'
-};
-static uint8_t raw_scan_rsp_data[] = {
-        /* flags */
-        0x02, 0x01, 0x06,
-        /* tx power */
-        0x02, 0x0a, 0xeb,
-        /* service uuid */
-        0x03, 0x03, 0xFF,0x00
-};
-
-// static uint8_t raw_adv_data[] = {
-//     /* flags */
-//     0x02, 0x01, 0x06,
-//     /* tx power */
-//     0x02, 0x0a, 0xeb,
-//     /* service uuid */
-//     0x05, 0x03, 0x2C, 0xFE, // Service UUID: FE2C (Little-endian)
-//     /* device name */
-//     0x0b, 0x09, 'b', 'u', 'd', 's', // Device Name: "buds"
-// };
-// static uint8_t raw_scan_rsp_data[] = {
-//     /* flags */
-//     0x02, 0x01, 0x06,
-//     /* tx power */
-//     0x02, 0x0a, 0xeb,
-//     /* service uuid */
-//     0x05, 0x03, 0x2C, 0xFE, // Service UUID: FE2C (Little-endian)
-// };
-
-
-#else
 static uint8_t service_uuid[16] = {
     /* LSB <--------------------------------------------------------------------------------> MSB */
     //first uuid, 16bit, [12],[13] is the value
@@ -110,33 +62,13 @@ static uint8_t service_uuid[16] = {
 static uint8_t service_data[] = {0x2C,0xFE,0x92,0xBB,0xBD};
 /* The length of adv data must be less than 31 bytes */
 static esp_ble_adv_data_t adv_data = {
-    // .set_scan_rsp = false,
     .include_name = true, // Only include this if necessary
     .include_txpower = true,
-    // .min_interval = 0x0006,
-    // .max_interval = 0x0010,
-    // .appearance = 0x00,
-    // .manufacturer_len = 0, // Adjust if necessary
-    // .p_manufacturer_data = NULL,
     .service_data_len = sizeof(service_data),
     .p_service_data = service_data,
     .service_uuid_len = sizeof(service_uuid),
     .p_service_uuid = service_uuid,
-    // .flag = (ESP_BLE_ADV_FLAG_GEN_DISC | ESP_BLE_ADV_FLAG_BREDR_NOT_SPT),
 };
-
-
-// scan response data
-// static esp_ble_adv_data_t scan_rsp_data = {
-//     .set_scan_rsp        = true,
-//     .include_name        = true,
-//     .include_txpower     = true,
-//     .service_data_len    = sizeof(service_data),
-//     .p_service_data      = service_data,
-//     .service_uuid_len    = sizeof(service_uuid),
-//     .p_service_uuid      = service_uuid,
-// };
-#endif /* CONFIG_SET_RAW_ADV_DATA */
 
 static esp_ble_adv_params_t adv_params = {
     .adv_int_min         = 0x20,
@@ -173,84 +105,11 @@ static struct gatts_profile_inst heart_rate_profile_tab[PROFILE_NUM] = {
     },
 };
 
-/* Service */
-static const uint16_t GATTS_SERVICE_UUID_TEST      = 0x00FF;
-static const uint16_t GATTS_CHAR_UUID_TEST_A       = 0xFF01;
-static const uint16_t GATTS_CHAR_UUID_TEST_B       = 0xFF02;
-static const uint16_t GATTS_CHAR_UUID_TEST_C       = 0xFF03;
-
-static const uint16_t primary_service_uuid         = ESP_GATT_UUID_PRI_SERVICE;
-static const uint16_t character_declaration_uuid   = ESP_GATT_UUID_CHAR_DECLARE;
-static const uint16_t character_client_config_uuid = ESP_GATT_UUID_CHAR_CLIENT_CONFIG;
-static const uint8_t char_prop_read                =  ESP_GATT_CHAR_PROP_BIT_READ;
-static const uint8_t char_prop_write               = ESP_GATT_CHAR_PROP_BIT_WRITE;
-static const uint8_t char_prop_read_write_notify   = ESP_GATT_CHAR_PROP_BIT_WRITE | ESP_GATT_CHAR_PROP_BIT_READ | ESP_GATT_CHAR_PROP_BIT_NOTIFY;
-static const uint8_t heart_measurement_ccc[2]      = {0x00, 0x00};
-static const uint8_t char_value[4]                 = {0x11, 0x22, 0x33, 0x44};
-
-
-/* Full Database Description - Used to add attributes into the database */
-static const esp_gatts_attr_db_t gatt_db[HRS_IDX_NB] =
-{
-    // Service Declaration
-    [IDX_SVC]        =
-    {{ESP_GATT_AUTO_RSP}, {ESP_UUID_LEN_16, (uint8_t *)&primary_service_uuid, ESP_GATT_PERM_READ,
-      sizeof(uint16_t), sizeof(GATTS_SERVICE_UUID_TEST), (uint8_t *)&GATTS_SERVICE_UUID_TEST}},
-
-    /* Characteristic Declaration */
-    [IDX_CHAR_A]     =
-    {{ESP_GATT_AUTO_RSP}, {ESP_UUID_LEN_16, (uint8_t *)&character_declaration_uuid, ESP_GATT_PERM_READ,
-      CHAR_DECLARATION_SIZE, CHAR_DECLARATION_SIZE, (uint8_t *)&char_prop_read_write_notify}},
-
-    /* Characteristic Value */
-    [IDX_CHAR_VAL_A] =
-    {{ESP_GATT_AUTO_RSP}, {ESP_UUID_LEN_16, (uint8_t *)&GATTS_CHAR_UUID_TEST_A, ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
-      GATTS_DEMO_CHAR_VAL_LEN_MAX, sizeof(char_value), (uint8_t *)char_value}},
-
-    /* Client Characteristic Configuration Descriptor */
-    [IDX_CHAR_CFG_A]  =
-    {{ESP_GATT_AUTO_RSP}, {ESP_UUID_LEN_16, (uint8_t *)&character_client_config_uuid, ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
-      sizeof(uint16_t), sizeof(heart_measurement_ccc), (uint8_t *)heart_measurement_ccc}},
-
-    /* Characteristic Declaration */
-    [IDX_CHAR_B]      =
-    {{ESP_GATT_AUTO_RSP}, {ESP_UUID_LEN_16, (uint8_t *)&character_declaration_uuid, ESP_GATT_PERM_READ,
-      CHAR_DECLARATION_SIZE, CHAR_DECLARATION_SIZE, (uint8_t *)&char_prop_read}},
-
-    /* Characteristic Value */
-    [IDX_CHAR_VAL_B]  =
-    {{ESP_GATT_AUTO_RSP}, {ESP_UUID_LEN_16, (uint8_t *)&GATTS_CHAR_UUID_TEST_B, ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
-      GATTS_DEMO_CHAR_VAL_LEN_MAX, sizeof(char_value), (uint8_t *)char_value}},
-
-    /* Characteristic Declaration */
-    [IDX_CHAR_C]      =
-    {{ESP_GATT_AUTO_RSP}, {ESP_UUID_LEN_16, (uint8_t *)&character_declaration_uuid, ESP_GATT_PERM_READ,
-      CHAR_DECLARATION_SIZE, CHAR_DECLARATION_SIZE, (uint8_t *)&char_prop_write}},
-
-    /* Characteristic Value */
-    [IDX_CHAR_VAL_C]  =
-    {{ESP_GATT_AUTO_RSP}, {ESP_UUID_LEN_16, (uint8_t *)&GATTS_CHAR_UUID_TEST_C, ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
-      GATTS_DEMO_CHAR_VAL_LEN_MAX, sizeof(char_value), (uint8_t *)char_value}},
-
-};
 
 static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param)
 {
     switch (event) {
-    #ifdef CONFIG_SET_RAW_ADV_DATA
-        case ESP_GAP_BLE_ADV_DATA_RAW_SET_COMPLETE_EVT:
-            adv_config_done &= (~ADV_CONFIG_FLAG);
-            if (adv_config_done == 0){
-                esp_ble_gap_start_advertising(&adv_params);
-            }
-            break;
-        case ESP_GAP_BLE_SCAN_RSP_DATA_RAW_SET_COMPLETE_EVT:
-            adv_config_done &= (~SCAN_RSP_CONFIG_FLAG);
-            if (adv_config_done == 0){
-                esp_ble_gap_start_advertising(&adv_params);
-            }
-            break;
-    #else
+    
         case ESP_GAP_BLE_ADV_DATA_SET_COMPLETE_EVT:
             adv_config_done &= (~ADV_CONFIG_FLAG);
             if (adv_config_done == 0){
@@ -263,7 +122,7 @@ static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
                 esp_ble_gap_start_advertising(&adv_params);
             }
             break;
-    #endif
+    
         case ESP_GAP_BLE_ADV_START_COMPLETE_EVT:
             /* advertising start complete event to indicate advertising start successfully or failed */
             if (param->adv_start_cmpl.status != ESP_BT_STATUS_SUCCESS) {
@@ -294,64 +153,6 @@ static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
     }
 }
 
-// void example_prepare_write_event_env(esp_gatt_if_t gatts_if, prepare_type_env_t *prepare_write_env, esp_ble_gatts_cb_param_t *param)
-// {
-//     ESP_LOGI(GATTS_TABLE_TAG, "prepare write, handle = %d, value len = %d", param->write.handle, param->write.len);
-//     esp_gatt_status_t status = ESP_GATT_OK;
-//     if (prepare_write_env->prepare_buf == NULL) {
-//         prepare_write_env->prepare_buf = (uint8_t *)malloc(PREPARE_BUF_MAX_SIZE * sizeof(uint8_t));
-//         prepare_write_env->prepare_len = 0;
-//         if (prepare_write_env->prepare_buf == NULL) {
-//             ESP_LOGE(GATTS_TABLE_TAG, "%s, Gatt_server prep no mem", __func__);
-//             status = ESP_GATT_NO_RESOURCES;
-//         }
-//     } else {
-//         if(param->write.offset > PREPARE_BUF_MAX_SIZE) {
-//             status = ESP_GATT_INVALID_OFFSET;
-//         } else if ((param->write.offset + param->write.len) > PREPARE_BUF_MAX_SIZE) {
-//             status = ESP_GATT_INVALID_ATTR_LEN;
-//         }
-//     }
-//     /*send response when param->write.need_rsp is true */
-//     if (param->write.need_rsp){
-//         esp_gatt_rsp_t *gatt_rsp = (esp_gatt_rsp_t *)malloc(sizeof(esp_gatt_rsp_t));
-//         if (gatt_rsp != NULL){
-//             gatt_rsp->attr_value.len = param->write.len;
-//             gatt_rsp->attr_value.handle = param->write.handle;
-//             gatt_rsp->attr_value.offset = param->write.offset;
-//             gatt_rsp->attr_value.auth_req = ESP_GATT_AUTH_REQ_NONE;
-//             memcpy(gatt_rsp->attr_value.value, param->write.value, param->write.len);
-//             esp_err_t response_err = esp_ble_gatts_send_response(gatts_if, param->write.conn_id, param->write.trans_id, status, gatt_rsp);
-//             if (response_err != ESP_OK){
-//                ESP_LOGE(GATTS_TABLE_TAG, "Send response error");
-//             }
-//             free(gatt_rsp);
-//         }else{
-//             ESP_LOGE(GATTS_TABLE_TAG, "%s, malloc failed", __func__);
-//         }
-//     }
-//     if (status != ESP_GATT_OK){
-//         return;
-//     }
-//     memcpy(prepare_write_env->prepare_buf + param->write.offset,
-//            param->write.value,
-//            param->write.len);
-//     prepare_write_env->prepare_len += param->write.len;
-
-// }
-
-// void example_exec_write_event_env(prepare_type_env_t *prepare_write_env, esp_ble_gatts_cb_param_t *param){
-//     if (param->exec_write.exec_write_flag == ESP_GATT_PREP_WRITE_EXEC && prepare_write_env->prepare_buf){
-//         esp_log_buffer_hex(GATTS_TABLE_TAG, prepare_write_env->prepare_buf, prepare_write_env->prepare_len);
-//     }else{
-//         ESP_LOGI(GATTS_TABLE_TAG,"ESP_GATT_PREP_WRITE_CANCEL");
-//     }
-//     if (prepare_write_env->prepare_buf) {
-//         free(prepare_write_env->prepare_buf);
-//         prepare_write_env->prepare_buf = NULL;
-//     }
-//     prepare_write_env->prepare_len = 0;
-// }
 
 static void gatts_profile_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param)
 {
@@ -361,85 +162,20 @@ static void gatts_profile_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_
             if (set_dev_name_ret){
                 ESP_LOGE(GATTS_TABLE_TAG, "set device name failed, error code = %x", set_dev_name_ret);
             }
-    #ifdef CONFIG_SET_RAW_ADV_DATA
-            esp_err_t raw_adv_ret = esp_ble_gap_config_adv_data_raw(raw_adv_data, sizeof(raw_adv_data));
-            if (raw_adv_ret){
-                ESP_LOGE(GATTS_TABLE_TAG, "config raw adv data failed, error code = %x ", raw_adv_ret);
-            }
-            adv_config_done |= ADV_CONFIG_FLAG;
-            esp_err_t raw_scan_ret = esp_ble_gap_config_scan_rsp_data_raw(raw_scan_rsp_data, sizeof(raw_scan_rsp_data));
-            if (raw_scan_ret){
-                ESP_LOGE(GATTS_TABLE_TAG, "config raw scan rsp data failed, error code = %x", raw_scan_ret);
-            }
-            adv_config_done |= SCAN_RSP_CONFIG_FLAG;
-    #else
             //config adv data
             esp_err_t ret = esp_ble_gap_config_adv_data(&adv_data);
             if (ret){
                 ESP_LOGE(GATTS_TABLE_TAG, "config adv data failed, error code = %x", ret);
             }
             adv_config_done |= ADV_CONFIG_FLAG;
-            //config scan response data
-            // esp_err_t ret = esp_ble_gap_config_adv_data(&scan_rsp_data);
-            // if (ret){
-            //     ESP_LOGE(GATTS_TABLE_TAG, "config scan response data failed, error code = %x", ret);
-            // }
-            // adv_config_done |= SCAN_RSP_CONFIG_FLAG;
             esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_ADV,ESP_PWR_LVL_N6);
-    #endif
-            esp_err_t create_attr_ret = esp_ble_gatts_create_attr_tab(gatt_db, gatts_if, HRS_IDX_NB, SVC_INST_ID);
-            if (create_attr_ret){
-                ESP_LOGE(GATTS_TABLE_TAG, "create attr table failed, error code = %x", create_attr_ret);
-            }
+            
         }
        	    break;
         case ESP_GATTS_READ_EVT:
             ESP_LOGI(GATTS_TABLE_TAG, "ESP_GATTS_READ_EVT");
        	    break;
         case ESP_GATTS_WRITE_EVT:
-            // if (!param->write.is_prep){
-            //     // the data length of gattc write  must be less than GATTS_DEMO_CHAR_VAL_LEN_MAX.
-            //     ESP_LOGI(GATTS_TABLE_TAG, "GATT_WRITE_EVT, handle = %d, value len = %d, value :", param->write.handle, param->write.len);
-            //     esp_log_buffer_hex(GATTS_TABLE_TAG, param->write.value, param->write.len);
-            //     if (heart_rate_handle_table[IDX_CHAR_CFG_A] == param->write.handle && param->write.len == 2){
-            //         uint16_t descr_value = param->write.value[1]<<8 | param->write.value[0];
-            //         if (descr_value == 0x0001){
-            //             ESP_LOGI(GATTS_TABLE_TAG, "notify enable");
-            //             uint8_t notify_data[15];
-            //             for (int i = 0; i < sizeof(notify_data); ++i)
-            //             {
-            //                 notify_data[i] = i % 0xff;
-            //             }
-            //             //the size of notify_data[] need less than MTU size
-            //             esp_ble_gatts_send_indicate(gatts_if, param->write.conn_id, heart_rate_handle_table[IDX_CHAR_VAL_A],
-            //                                     sizeof(notify_data), notify_data, false);
-            //         }else if (descr_value == 0x0002){
-            //             ESP_LOGI(GATTS_TABLE_TAG, "indicate enable");
-            //             uint8_t indicate_data[15];
-            //             for (int i = 0; i < sizeof(indicate_data); ++i)
-            //             {
-            //                 indicate_data[i] = i % 0xff;
-            //             }
-            //             //the size of indicate_data[] need less than MTU size
-            //             esp_ble_gatts_send_indicate(gatts_if, param->write.conn_id, heart_rate_handle_table[IDX_CHAR_VAL_A],
-            //                                 sizeof(indicate_data), indicate_data, true);
-            //         }
-            //         else if (descr_value == 0x0000){
-            //             ESP_LOGI(GATTS_TABLE_TAG, "notify/indicate disable ");
-            //         }else{
-            //             ESP_LOGE(GATTS_TABLE_TAG, "unknown descr value");
-            //             esp_log_buffer_hex(GATTS_TABLE_TAG, param->write.value, param->write.len);
-            //         }
-
-            //     }
-            //     /* send response when param->write.need_rsp is true*/
-            //     if (param->write.need_rsp){
-            //         esp_ble_gatts_send_response(gatts_if, param->write.conn_id, param->write.trans_id, ESP_GATT_OK, NULL);
-            //     }
-            // }else{
-            //     /* handle prepare write */
-            //     example_prepare_write_event_env(gatts_if, &prepare_write_env, param);
-            // }
       	    break;
         case ESP_GATTS_EXEC_WRITE_EVT:
             // the length of gattc prepare write data must be less than GATTS_DEMO_CHAR_VAL_LEN_MAX.
