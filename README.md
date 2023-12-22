@@ -9,7 +9,8 @@
 ## Updates
 **12/21/2023** <br>
 <br>
-Thanks to [Yeet1000
+It is no longer nescessary to re-run app.py with -d after viewing the options.  
+You can now just type the number of the option you want to use.
 **9/21/23** <br>
 <br>
 Thanks to [0DayCTF](https://github.com/0dayctf) the random option has been added!<br> 
