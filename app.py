@@ -8,6 +8,8 @@ import bluetooth._bluetooth as bluez
 from time import sleep
 from utils.bluetooth_utils import toggle_device, start_le_advertising, stop_le_advertising
 
+
+
 # Add a docstring to describe the purpose of the script
 help_desc = '''
 
@@ -93,23 +95,25 @@ def main():
     parser.add_argument('-i', '--interval', default=200, type=int, help='Advertising interval (default 200))')
     parser.add_argument('-d', '--data', type=int, help='Select a message to send (e.g., -d 1)')
     
+    interactive = False
     # Add random argument
     parser.add_argument('-r', '--random', action='store_true', help='Randomly loop through advertising data')
     
     args = parser.parse_args()
 
     if args.data is None and not args.random:
-        print("Please select a message option using -d or use --random for random selection.")
-        print("Available message options:")
+        print("Please select a message option below:")
         for option, description in bt_data_options.items():
             print(f"{option}: {description}")
-        return
+        args.data = int(input())
+        interactive = True
 
     if args.data and args.data not in bt_data_options:
         print(f"Invalid data option: {args.data}")
-        print("Available data options:")
-        for option, description in bt_data_options.items():
-            print(f"{option}: {description}")
+        if interactive == False:
+            print("Available data options:")
+            for option, description in bt_data_options.items():
+                print(f"{option}: {description}")
         return
     
     # the default Bluetooth device is hci0
