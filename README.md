@@ -7,7 +7,9 @@
 > The author of this project is not responsible for any possible harm caused by the materials of this project.
 
 ## Updates
-
+**12/21/2023** <br>
+<br>
+Thanks to [Yeet1000
 **9/21/23** <br>
 <br>
 Thanks to [0DayCTF](https://github.com/0dayctf) the random option has been added!<br> 
@@ -18,6 +20,7 @@ Thanks to [0DayCTF](https://github.com/0dayctf) the random option has been added
 ```python3 app.py -r -i 20``` <br>
 to set to it to random and the time interval to 20ms, making it more spammy.<br>
 <br>
+
 **9/13/2023** <br>
 <br>
 After [Techryptic's attempt to steal the work of myself and WillyJL](https://techcrunch.com/2023/09/05/flipper-zero-hacking-iphone-flood-popups/), Willy has taken the time to give an insanely in-depth timeline of the events and proof of the work being stolen (Git and my typos dont lie!) Check out the full report below and please help us spread the word that the person who has been all over the news outlets claiming this as their work, stole the code and gave none of the actual developers credit.<br>
