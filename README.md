@@ -25,16 +25,16 @@ After [Techryptic's attempt to steal the work of myself and WillyJL](https://tec
 [The Controversy Behind Apple BLE Spam](https://willyjl.dev/blog/the-controversy-behind-apple-ble-spam)
 ### Flipper Zero
 
-Thanks to the amazing work of [Willy-JL](https://github.com/Willy-JL/Willy-JL) this has been added to the [Flipper Zero Xtreme Firmware](https://github.com/Flipper-XFW/Xtreme-Firmware). It's currently in dev and will be officially released in the next update.
-#### To install it now, follow the guide below from the Xtreme Firmware page to clone and compile the current dev build that contains the Apple BLE Spam app.
+Thanks to the amazing work of [Willy-JL](https://github.com/Willy-JL/Willy-JL) this has been added to the [Flipper Zero Momentum Firmware](https://github.com/Flipper-XFW/Xtreme-Firmware).
+#### To install it now, follow the guide below from the Momentum Firmware page to clone and compile the current build that contains the Apple BLE Spam app.
 
 > :warning: **Warning!** <br>
 > We will not give basic support for compiling in our server. This is intended for people that already *know* what they are doing!
 
 ```bash
-To download the needed tools:
-$ git clone --recursive --jobs 8 https://github.com/Flipper-XFW/Xtreme-Firmware.git
-$ cd Xtreme-Firmware/
+To download the repository:
+$ git clone --recursive --jobs 8 https://github.com/Next-Flip/Momentum-Firmware.git
+$ cd Momentum-Firmware/
 
 To flash directly to the Flipper (Needs to be connected via USB, qFlipper closed)
 $ ./fbt flash_usb_full
@@ -43,7 +43,7 @@ To compile a TGZ package
 $ ./fbt updater_package
 
 To build and launch a single app:
-$ ./fbt launch APPSRC=some_appid
+$ ./fbt launch APPSRC=your_appid
 ```
 
 ### ESP-32
