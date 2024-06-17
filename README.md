@@ -25,7 +25,7 @@ After [Techryptic's attempt to steal the work of myself and WillyJL](https://tec
 [The Controversy Behind Apple BLE Spam](https://willyjl.dev/blog/the-controversy-behind-apple-ble-spam)
 ### Flipper Zero
 
-Thanks to the amazing work of [Willy-JL](https://github.com/Willy-JL/Willy-JL) this has been added to the [Flipper Zero Momentum Firmware](https://github.com/Flipper-XFW/Xtreme-Firmware).
+Thanks to the amazing work of [Willy-JL](https://github.com/Willy-JL/Willy-JL) this has been added to the [Flipper Zero Momentum Firmware](https://github.com/Next-Flip/Momentum-Firmware).
 #### To install it now, follow the guide below from the Momentum Firmware page to clone and compile the current build that contains the Apple BLE Spam app.
 
 > :warning: **Warning!** <br>
