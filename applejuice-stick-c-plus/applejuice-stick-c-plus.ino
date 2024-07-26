@@ -105,7 +105,6 @@ void drawmenu() {
 void setup() {
   // M5 Initalization Code
   M5.begin();
-  M5.Axp.ScreenBreath(11); // Brightness
   M5.Lcd.setRotation(rotation);
   M5.Lcd.setTextColor(GREEN, BLACK);
   pinMode(M5_LED, OUTPUT);
@@ -239,6 +238,7 @@ void loop() {
         data = SetupNewPhone;
         break;
     }
+    BLEAdvertisementData oAdvertisementData = BLEAdvertisementData();
     M5.Lcd.fillScreen(BLACK);
     M5.Lcd.setTextSize(2);
     M5.Lcd.setCursor(5, 10);
@@ -247,7 +247,11 @@ void loop() {
     M5.Lcd.print(ajmenu[cursor].name);
     M5.Lcd.print("\n\nHold Side Key\n  To Exit");
     while (true) {
-      oAdvertisementData.addData(std::string((char*)data, sizeof(Airpods)));
+      if (deviceType >= 18){
+        oAdvertisementData.addData(std::string((char*)data, sizeof(AppleTVPair)));
+      } else {
+        oAdvertisementData.addData(std::string((char*)data, sizeof(Airpods)));
+      }
       pAdvertising->setAdvertisementData(oAdvertisementData);
       digitalWrite(M5_LED, LOW); //LED ON on Stick C Plus
       pAdvertising->start();
@@ -255,8 +259,9 @@ void loop() {
       delay(delaySeconds * 1000); // delay for delaySeconds seconds
       pAdvertising->stop();
       if (digitalRead(M5_BUTTON_RST) == LOW) {
-        // Just do a software reset when done, easier than cleaning up pointers and vars.
-        reboot();
+        drawmenu();
+        delay(500);
+        break;
       }
     }
   }
